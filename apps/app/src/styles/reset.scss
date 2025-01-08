@@ -1,0 +1,91 @@
+
+html {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: #fff;
+  font-family: var(--inter-font);
+  padding: 0;
+  margin: 0;
+  -webkit-text-size-adjust: none;
+}
+body {
+  overflow-x: hidden;
+}
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a:link,
+a:visited {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:link:active,
+a:visited:active {
+  color: inherit;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  margin: 0;
+}
+
+button,
+input {
+  overflow: visible;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  -webkit-appearance: button;
+  border: none;
+}
+
+button:focus {
+  outline: none;
+}
+textarea:focus,
+input:focus {
+  outline: none;
+}
+textarea,
+input {
+  border: none;
+}
+
+.locked {
+  overflow: hidden;
+}
+
+.opacityLoading {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+img {
+  font-size: 0;
+}

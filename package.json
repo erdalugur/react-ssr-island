@@ -1,0 +1,24 @@
+{
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"private": "true",
+	"type": "module",
+	"workspaces": [
+		"packages/*",
+		"apps/*"
+	],
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"start": "turbo run start",
+		"format": "turbo run format",
+		"lint": "turbo run lint"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"turbo": "^2.3.3"
+	},
+	"packageManager": "yarn@1.22.17"
+}
