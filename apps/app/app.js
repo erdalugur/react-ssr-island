@@ -1,6 +1,6 @@
 const express = require('express');
 const compression = require('compression');
-const render = require('./server/render.js');
+const render = require('@octopus/server');
 const isomorphicFetch = require('isomorphic-fetch');
 fetch = isomorphicFetch;
 const PORT = process.env.PORT || 3000;

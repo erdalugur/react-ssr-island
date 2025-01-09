@@ -2,7 +2,7 @@ const React = require('react');
 const path = require('path');
 const fs = require('fs');
 
-const root = path.resolve(__dirname, '..');
+const root = path.resolve(process.cwd());
 
 function manifestLoader(name) {
   return require(resolveModule(name));

@@ -9,7 +9,7 @@ const {
 const path = require('path');
 const getConfig = require('@octopus/runtime');
 
-const root = path.resolve(__dirname, '..');
+const root = path.resolve(process.cwd());
 
 const manifest = manifestLoader('pages-manifest.json');
 
@@ -35,9 +35,8 @@ const { publicRuntimeConfig } = getConfig();
 
 module.exports = async function render(req, res, normalizedPath) {
   const mod = modules[normalizedPath];
-
   const assets = staticManifest[normalizedPath];
-
+  const Component = mod.default;
   if (!mod) {
     res.status(404).send('unknown page');
     return;
