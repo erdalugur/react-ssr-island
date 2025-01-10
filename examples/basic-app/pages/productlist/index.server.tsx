@@ -4,7 +4,6 @@ import withCache from 'octopus/hydrator/cache';
 import Header from '../../src/components/Header';
 import ProductCard from '../../src/components/Card';
 import CardContainer from '../../src/components/CardContainer';
-import getConfig from 'octopus/config';
 
 const ProductList = (props: { products: any[] }) => {
   return (

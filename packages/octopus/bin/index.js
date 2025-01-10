@@ -10,10 +10,10 @@ if (!command) {
 }
 switch (command) {
   case "build":
-    require('../webpack').build();
+    require('../scripts/build')();
     break;
   case 'dev':
-    require('../webpack').watch();
+    require('../scripts/dev');
     break;
   default:
     break;

@@ -1,13 +1,12 @@
-module.exports = () => {
-  if (typeof window !== 'undefined') {
-    return window.__PRELOADED_STATE__.publicRuntimeConfig
-  }
-
-  const path = require('path');
-  const config = require(path.join(process.cwd(), 'octopus.config.js'));
-
-  return {
-    publicRuntimeConfig: config.publicRuntimeConfig,
-    serverRuntimeConfig: config.serverRuntimeConfig
-  }
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.setConfig = setConfig;
+exports.default = () => {
+    if (typeof window !== 'undefined') {
+        return window.__INITIAL_STATE__.runtimeConfig;
+    }
+    return globalThis.runtimeConfig;
+};
+function setConfig(config) {
+    globalThis.runtimeConfig = config;
 }

@@ -48,11 +48,7 @@ const config = {
 					minimizer: [
 						new TerserPlugin({
 							terserOptions: {
-								compress: {
-									// drop_console: true,
-									// drop_debugger: true,
-									// dead_code: true
-								}
+								compress: true
 							}
 						})
 					]
