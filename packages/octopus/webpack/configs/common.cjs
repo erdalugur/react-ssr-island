@@ -2,6 +2,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
+const { getOctopusConfig } = require("../utils");
 
 const generateScopedName = (localName, resourcePath) => {
 	const getHash = (value) => crypto.createHash("sha256").update(value).digest("hex");
@@ -11,29 +12,18 @@ const generateScopedName = (localName, resourcePath) => {
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
+const octopusConfig = getOctopusConfig();
+const pagesdir = octopusConfig.pagesdir || path.join(process.cwd(), "pages")
+const outdir = octopusConfig.outdir || path.join(process.cwd(), 'dist');
+
 const entryLoader = (platform = "server") => {
-	const pagesDir = path.join(process.cwd(), "pages");
 	const entries = {};
 
 	try {
-		// Dizindeki dosyaları oku
-		const files = fs.readdirSync(pagesDir);
-		// if (platform === "client") {
-		// 	for (const file of files) {
-		// 		if (!file.startsWith("_")) entries[`/${file.toLocaleLowerCase()}`] = file;
-		// 	}
-		// 	return entries;
-		// }
-
+		const files = fs.readdirSync(pagesdir);
 		for (const file of files) {
-			const fullPath = path.join(pagesDir, file);
-			if (file.startsWith("_")) {
-				const ext = path.extname(file);
-				const name = file.replace(ext, "").toLowerCase();
-				entries[name] = fullPath;
-			} else {
-				entries[file] = file.startsWith("_") ? fullPath : `${fullPath}/index.${platform}.tsx`;
-			}
+			const fullPath = path.join(pagesdir, file);
+			entries[file] = file.startsWith("_") ? fullPath : `${fullPath}/index.${platform}.tsx`;
 		}
 
 		return entries;
@@ -150,5 +140,8 @@ module.exports = {
 	getStyleLoaders,
 	getMiniCssExtractPlugin,
 	extensions,
-	getManifest
+	getManifest,
+	pagesdir,
+	outdir,
+	octopusConfig
 };

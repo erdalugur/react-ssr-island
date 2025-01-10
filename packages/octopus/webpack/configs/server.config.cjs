@@ -7,7 +7,7 @@ const {
   getMiniCssExtractPlugin,
   getStyleLoaders,
   extensions,
-  getManifest
+  outdir
 } = require('./common.cjs');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -27,7 +27,7 @@ const config = {
     splitChunks: false // Split chunks özelliğini kapatır
   },
   output: {
-    path: path.join(process.cwd(), 'dist'),
+    path: outdir,
     filename: 'pages/[name].cjs',
     libraryTarget: 'commonjs2'
   },

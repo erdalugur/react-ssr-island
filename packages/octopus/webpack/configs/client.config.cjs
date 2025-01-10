@@ -7,7 +7,7 @@ const {
 	getJavascriptLoaders,
 	getMiniCssExtractPlugin,
 	getStyleLoaders,
-	getManifest
+	outdir
 } = require("./common.cjs");
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -21,7 +21,7 @@ const config = {
 	target: "browserslist",
 	entry: entries,
 	output: {
-		path: path.join(process.cwd(), "dist"),
+		path: outdir,
 		filename: "static/js/[name]/main.[chunkhash].js"
 	},
 	devtool: isDevelopment ? "eval-source-map" : false,
