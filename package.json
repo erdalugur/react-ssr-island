@@ -6,7 +6,7 @@
 	"type": "module",
 	"workspaces": [
 		"packages/*",
-		"apps/*"
+		"examples/*"
 	],
 	"scripts": {
 		"dev": "turbo run dev",

@@ -1,0 +1,36 @@
+{
+	"name": "app",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"private": true,
+	"scripts": {
+		"build": "octopus build",
+		"dev": "nodemon app.js",
+		"format": "prettier --write \"**/*.{js,ts,tsx,md}\"",
+		"start": "NODE_ENV=production node app.js"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"octopus": "1.0.0",
+		"express": "^4.21.2",
+		"isomorphic-fetch": "^3.0.0",
+		"preact": "^10.25.3",
+		"react": "18.3.1",
+		"react-dom": "18.3.1",
+		"compression": "1.7.5"
+	},
+	"devDependencies": {
+		"@types/react": "^19.0.2",
+		"octopus-config-prettier": "1.0.0",
+		"nodemon": "^3.1.9",
+		"typescript": "^5.7.2",
+		"concurrently": "9.1.2"
+	},
+	"browserslist": [
+		"> 0.2%",
+		"not dead",
+		"not op_mini all"
+	]
+}
