@@ -7,12 +7,13 @@ const {
 	getJavascriptLoaders,
 	getMiniCssExtractPlugin,
 	getStyleLoaders,
-	outdir
+	outdir,
+	octopusConfig
 } = require("./common.cjs");
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
-const entries = entryLoader("client");
+const entries = octopusConfig.clientEntries || entryLoader("client");
 
 /** @type { import('webpack').Configuration } */
 const config = {

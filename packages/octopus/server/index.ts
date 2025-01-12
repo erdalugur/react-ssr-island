@@ -2,8 +2,7 @@ import { renderToString } from 'react-dom/server';
 import React from 'react';
 import { Request, Response } from 'express'
 import {
-  createGetServerSideProps,
-  createMeta,
+  routeLoader,
   getStyleTagOrLinks,
   manifestLoader
 } from './utils';
@@ -17,11 +16,14 @@ const manifest = manifestLoader('pages-manifest.json');
 const staticManifest = manifestLoader('static-manifest.json');
 
 const styles = getStyleTagOrLinks(manifest);
+
 const { getOctopusConfig } = require('../webpack/utils')
+
 let octopusConfig: any
 if (process.env.NODE_ENV === 'production') {
   octopusConfig = getOctopusConfig()
 }
+
 export function createRequestHandler({ dev }: { dev: boolean}) {
   if (dev) {
     require('../webpack').watch();
@@ -42,25 +44,19 @@ export function createRequestHandler({ dev }: { dev: boolean}) {
       serverRuntimeConfig
     })
 
-    const mod = require(path.join(outdir, `${item.runtime}`));
+    const routePath = path.join(outdir, `${item.runtime}`);
+    const { Component, Meta, getServerSideProps } = await routeLoader(routePath);
 
     const assets = staticManifest[route];
 
-    if (!mod) {
+    if (!Component) {
       res.status(404).send('unknown page');
       return;
     }
   
-    if (!mod.default) {
-      res.status(500).send('page must be default export');
-      return;
-    }
-    
-    const getServerSideProps = createGetServerSideProps(mod)
     const pageProps = await getServerSideProps({ req, res });
-    const html = renderToString(React.createElement(mod.default, pageProps.props));
-    const meta = createMeta(mod);
-    const metaTags = renderToString(React.createElement(meta, pageProps.props));
+    const html = renderToString(React.createElement(Component, pageProps.props));
+    const metaTags = renderToString(React.createElement(Meta, pageProps.props));
   
     const linkOrStyle = styles[route];
   

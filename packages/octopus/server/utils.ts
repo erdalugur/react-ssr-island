@@ -12,15 +12,18 @@ export function resolveModule(m: string) {
   return path.join(root, 'dist', m);
 }
 
-export function createGetServerSideProps(mod: any) {
-  return mod?.getServerSideProps || (() => ({ props: {} }));
-}
-export function createMeta(mod: any) {
-  return mod?.Meta || (() => React.createElement(React.Fragment));
+export async function routeLoader(route: string){
+  const mod = await import(route);
+  return {
+    Component: mod.default,
+    Meta: mod?.Meta || (() => React.createElement(React.Fragment)),
+    getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} }))
+  }
 }
 const isProd = process.env.NODE_ENV === 'production';
 
 const styles: Record<string, string> = {};
+
 export function getStyleTagOrLinks(manifest: Record<string, {runtime: string, css: string[]}>) {
   if (Object.keys(styles).length > 0) return styles;
 

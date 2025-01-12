@@ -1,1 +1,1 @@
-module.exports = require('@octopus/config-prettier');
+module.exports = require('octopus-config-prettier');

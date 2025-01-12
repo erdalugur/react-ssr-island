@@ -45,21 +45,16 @@ function createRequestHandler({ dev }) {
                 publicRuntimeConfig,
                 serverRuntimeConfig
             });
-            const mod = require(path_1.default.join(outdir, `${item.runtime}`));
+            const routePath = path_1.default.join(outdir, `${item.runtime}`);
+            const { Component, Meta, getServerSideProps } = yield (0, utils_1.routeLoader)(routePath);
             const assets = staticManifest[route];
-            if (!mod) {
+            if (!Component) {
                 res.status(404).send('unknown page');
                 return;
             }
-            if (!mod.default) {
-                res.status(500).send('page must be default export');
-                return;
-            }
-            const getServerSideProps = (0, utils_1.createGetServerSideProps)(mod);
             const pageProps = yield getServerSideProps({ req, res });
-            const html = (0, server_1.renderToString)(react_1.default.createElement(mod.default, pageProps.props));
-            const meta = (0, utils_1.createMeta)(mod);
-            const metaTags = (0, server_1.renderToString)(react_1.default.createElement(meta, pageProps.props));
+            const html = (0, server_1.renderToString)(react_1.default.createElement(Component, pageProps.props));
+            const metaTags = (0, server_1.renderToString)(react_1.default.createElement(Meta, pageProps.props));
             const linkOrStyle = styles[route];
             const preloadedStateScript = `<script id="__PRELOADED_STATE__" type="application/json">${JSON.stringify({
                 page: route,
