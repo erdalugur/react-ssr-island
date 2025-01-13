@@ -13,8 +13,8 @@ const generateScopedName = (localName, resourcePath) => {
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 const octopusConfig = getOctopusConfig();
-const pagesdir = octopusConfig.pagesdir || path.join(process.cwd(), "pages")
-const outdir = octopusConfig.outdir || path.join(process.cwd(), 'dist');
+const pagesdir = octopusConfig.pagesdir
+const outdir = octopusConfig.outdir
 
 const entryLoader = (platform = "server") => {
 	const entries = {};
