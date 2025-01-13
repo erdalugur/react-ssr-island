@@ -1,7 +1,11 @@
-import React, { ComponentType } from 'react';
+import React, { ComponentType, createElement } from 'react';
 import { HydrationConfig, HydrationInput } from './types';
 
-export function withHydrator<T extends object>(Component: ComponentType<T>, input: HydrationInput) {
+export function withHydrator<T extends object>(
+  Component: ComponentType<T>,
+  input: HydrationInput,
+  tag: React.HTMLElementType = "div"
+) {
   const getConfig = (input: HydrationInput): HydrationConfig => {
     if (typeof input === 'string') {
       return { name: input, hydrationType: 'lazyinview' };
@@ -10,12 +14,10 @@ export function withHydrator<T extends object>(Component: ComponentType<T>, inpu
   };
 
   const config = getConfig(input);
-  return function HydratedComponent(props: T) {
-    return (
-      <section data-island={JSON.stringify({ ...config, props })}>
-        <Component {...props} />
-      </section>
-    );
+  return function HydratedComponent(props: T): JSX.Element {
+    return createElement(tag, {
+      "data-island": JSON.stringify({ ...config, props })
+    }, createElement(Component, props))
   };
 }
 export default withHydrator;

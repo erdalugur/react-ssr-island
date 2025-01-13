@@ -10,7 +10,12 @@ export const hydrationTypes = {
 export type HydrationConfig = {
   name: string;
   hydrationType: HydrationType;
-  dependsOn?: string[];
+  initate?: {
+    selector: string
+    name: string
+    hydrationType: HydrationType
+    initialProps?: any
+  }
 };
 
 export interface GlobalState {

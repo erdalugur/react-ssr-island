@@ -4,11 +4,11 @@
 		"description": "",
 		"main": "index.js",
 		"bin": {
-				"octopus": "./bin/index.js"
+			"octopus": "./bin/index.js"
 		},
 		"scripts": {
-				"test": "echo \"Error: no test specified\" && exit 1",
-				"build": "tsc"
+			"test": "echo \"Error: no test specified\" && exit 1",
+			"build": "tsc"
 		},
 		"author": "",
 		"license": "ISC",

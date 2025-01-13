@@ -7,8 +7,12 @@ export default function ShoppingCart() {
   useEffect(() => {
     cart.subscribe((items) => setItems(items));
   }, []);
+
+  const openCart = () => {
+    document.dispatchEvent(new CustomEvent('cart-open', { detail: { open: true } }));
+  };
   return (
-    <div>
+    <div onClick={openCart}>
       <span>Sepetiniz: {items.length}</span>
     </div>
   );
