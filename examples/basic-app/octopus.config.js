@@ -1,8 +1,4 @@
 const path = require('path');
+const { defineConfig } = require('octopus/config');
 
-module.exports = {
-  publicRuntimeConfig: {},
-  serverRuntimeConfig: {},
-  pagesdir: path.join(process.cwd(), 'pages')
-  //outdir: path.join(process.cwd(), 'build')
-};
+module.exports = defineConfig({});
