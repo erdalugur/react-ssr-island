@@ -1,6 +1,7 @@
 const { defineConfig } = require('octopus/config');
+const path = require('path');
 module.exports = defineConfig({
   publicRuntimeConfig: {
-    API_URL: 'deneme'
+    IMAGE_URL: 'https://www.w3schools.com'
   }
 });

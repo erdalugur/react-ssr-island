@@ -1,64 +1,68 @@
 import { renderToString } from 'react-dom/server';
 import React from 'react';
-import { Request, Response } from 'express'
-import {
-  routeLoader,
-  getStyleTagOrLinks,
-  manifestLoader
-} from './utils';
+import { Request, Response } from 'express';
 import path from 'path';
+import { OctopusConfig } from '../config';
+import fs from 'fs';
 
-const root = path.resolve(process.cwd());
-
-const manifest = manifestLoader('pages-manifest.json');
-
-const staticManifest = manifestLoader('static-manifest.json');
-
-const styles = getStyleTagOrLinks(manifest);
-
-const { getOctopusConfig } = require('../webpack/utils')
-
-let octopusConfig: any
-if (process.env.NODE_ENV === 'production') {
-  octopusConfig = getOctopusConfig()
-}
-function register(config: Record<string, any>) {
-  Object.keys(config).forEach(key => {
-    process.env[key] = config[key];
-  })
-}
-export function createRequestHandler({ dev }: { dev: boolean}) {
-  if (dev) {
-    require('../webpack').watch();
-    octopusConfig = getOctopusConfig()
+class Server {
+  octopusConfig!: OctopusConfig;
+  dev: boolean = process.env.NODE_ENV !== 'production';
+  serverManifest: any;
+  clientManifest: any;
+  styleTagsOrLinks!: Record<string, string>;
+  styles: Record<string, string> = {};
+  outdir!: string;
+  outdirname!: string
+  constructor({ dev }: { dev: boolean }) {
+    if (dev) {
+      require('../webpack').watch();
+      this.dev = dev;
+    }
   }
-  return async function render(req: Request, res: Response, route: string) {
-    const item = manifest[route];
+
+  register = (config: Record<string, any>) => {
+    Object.keys(config).forEach((key) => {
+      process.env[key] = config[key];
+    });
+  };
+
+  routeLoader = async (route: string) => {
+    const mod = await import(route);
+    return {
+      Component: mod.default,
+      Meta: mod?.Meta || (() => React.createElement(React.Fragment)),
+      getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} }))
+    };
+  };
+
+  render = async (req: Request, res: Response, route: string) => {
+    const item = this.serverManifest[route];
     if (!item || (item && !item.runtime)) {
       res.sendStatus(404);
       return;
     }
-    
-    const { publicRuntimeConfig = {}, serverRuntimeConfig } = octopusConfig || {};
-    register({ ...publicRuntimeConfig, ...serverRuntimeConfig });
-    const outdir = octopusConfig.outdir || path.resolve(root, "dist");
 
-    const routePath = path.join(outdir, `${item.runtime}`);
-    const { Component, Meta, getServerSideProps } = await routeLoader(routePath);
+    const { publicRuntimeConfig, serverRuntimeConfig } = this.octopusConfig;
 
-    const assets = staticManifest[route];
+    this.register({ ...publicRuntimeConfig, ...serverRuntimeConfig });
+
+    const routePath = path.join(this.outdir, `${item.runtime}`);
+    const { Component, Meta, getServerSideProps } = await this.routeLoader(routePath);
+
+    const assets = this.clientManifest[route];
 
     if (!Component) {
       res.status(404).send('unknown page');
       return;
     }
-  
+
     const pageProps = await getServerSideProps({ req, res });
     const html = renderToString(React.createElement(Component, pageProps.props));
     const metaTags = renderToString(React.createElement(Meta, pageProps.props));
-  
-    const linkOrStyle = styles[route];
-  
+
+    const linkOrStyle = this.styleTagsOrLinks[route];
+
     const preloadedStateScript = `<script id="__PRELOADED_STATE__" type="application/json">${JSON.stringify(
       {
         page: route,
@@ -66,12 +70,12 @@ export function createRequestHandler({ dev }: { dev: boolean}) {
         runtimeConfig: publicRuntimeConfig
       }
     )}</script>`;
-  
+
     const javascripts = [
       preloadedStateScript,
-      ...assets.js.map((item: string) => `<script src="/dist${item}"></script>`)
+      ...assets.js.map((item: string) => `<script src="/${this.outdirname}${item}"></script>`)
     ].join('\n');
-  
+
     const document = `
       <html>
         <head>
@@ -88,4 +92,54 @@ export function createRequestHandler({ dev }: { dev: boolean}) {
     `;
     res.send(document);
   };
+
+  manifestLoader = async (m: string) => {
+    return import(path.join(this.outdir, m));
+  };
+  prepare = async () => {
+    if (this.dev) {
+      const { watch } = require('../webpack');
+      await watch();
+    }
+    const { getOctopusConfig } = require('../webpack/utils');
+    this.octopusConfig = getOctopusConfig();
+    this.outdir = this.octopusConfig.outdir as string;
+    const names = this.outdir.split('/');
+    this.outdirname = names[names.length - 1];
+    this.serverManifest = await this.manifestLoader('pages-manifest.json');
+    this.clientManifest = await this.manifestLoader('static-manifest.json');
+    this.styleTagsOrLinks = this.getStyleTagOrLinks(this.serverManifest);
+    return Promise.resolve();
+  };
+
+  getStyleTagOrLinks(manifest: Record<string, { runtime: string; css: string[] }>) {
+    if (Object.keys(this.styles).length > 0) return this.styles;
+
+    Object.keys(manifest).forEach((key) => {
+      const css: string[] = manifest[key].css || [];
+
+      if (!this.dev) {
+        const _styles: string[] = [];
+        css.forEach((s) => {
+          const p = path.join(this.outdir, `${s}`);
+          const style = fs.readFileSync(p, { encoding: 'utf-8' });
+          _styles.push(`<style>${style}</style>`);
+        });
+        this.styles[key] = _styles.join(`\n`);
+      } else {
+        this.styles[key] = css
+          .map((item) => `<link rel="stylesheet" href="/${this.outdirname}${item}"/>`)
+          .join('\n');
+      }
+    });
+    return this.styles;
+  }
+
+  getRequestHandler = async (req: Request, res: Response) => {
+    return () => {};
+  };
+}
+
+export default function createServer({ dev }: { dev: boolean }) {
+  return new Server({ dev });
 }

@@ -1,6 +1,6 @@
 import '../../src/styles/reset.scss';
 import React from 'react';
-import withCache from 'octopus/server/cache';
+import withCache from 'octopus/hoc/cache';
 import Header from '../../src/components/Header';
 import ProductCard from '../../src/components/Card';
 import CardContainer from '../../src/components/CardContainer';
@@ -42,7 +42,7 @@ function generateArrayOfObjects(count = 1000) {
       id: i,
       title: getRandomTitle(i),
       description: getRandomDescription(),
-      img: 'https://www.w3schools.com/w3images/jeans3.jpg',
+      img: '/w3images/jeans3.jpg',
       price: 5500
     });
   }

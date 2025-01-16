@@ -1,4 +1,4 @@
-import { GlobalState } from '../hydrator/types';
+import { GlobalState } from '../hoc/types';
 
 if (typeof window !== 'undefined') {
   const state: GlobalState = JSON.parse(

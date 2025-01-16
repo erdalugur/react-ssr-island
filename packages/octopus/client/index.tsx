@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import { HydrationConfig, hydrationTypes } from '../hydrator/types';
+import { HydrationConfig, hydrationTypes } from '../hoc/types';
 
 
 function withObserver(element: Element, hydrateCallback: (unobserve: () => void) => void) {

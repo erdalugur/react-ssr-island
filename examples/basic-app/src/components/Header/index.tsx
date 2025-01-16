@@ -1,7 +1,7 @@
 import React from 'react';
 import classes from './Header.module.scss';
 import ShoppingCart from '../ShoppingCart';
-import withHydrator from 'octopus/hydrator';
+import withHydrator from 'octopus/hoc/hydrator';
 import CartModal from '../CartModal';
 
 const HydratedShoppingCart = withHydrator(ShoppingCart, {

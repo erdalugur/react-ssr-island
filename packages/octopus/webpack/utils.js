@@ -5,7 +5,7 @@ const distdir = path.join(root, 'dist');
 const pagesdir = path.join(root, 'pages');
 
 function mergeConfig(config) {
-  config.outdir = config.outdir || distdir;
+  config.outdir = config.outdir || distdir;
   config.pagesdir = config.pagesdir || pagesdir;
   config.serverRuntimeConfig = config.serverRuntimeConfig || {};
   config.publicRuntimeConfig = config.publicRuntimeConfig || {};

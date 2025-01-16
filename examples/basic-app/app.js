@@ -1,28 +1,29 @@
 const express = require('express');
 const compression = require('compression');
-const octopus = require('octopus/server');
+const createServer = require('octopus/server').default;
 const isomorphicFetch = require('isomorphic-fetch');
 fetch = isomorphicFetch;
 const PORT = process.env.PORT || 3000;
-const isProd = process.env.NODE_ENV === 'production';
-const app = express();
-app.use(compression());
+const dev = process.env.NODE_ENV !== 'production';
 
-app.use('/dist', express.static('dist'));
+const octopus = createServer({ dev: dev });
 
-app.get('/favicon.ico', (req, res, next) => {
-  res.sendStatus(404);
-});
+octopus.prepare().then(() => {
+  const app = express();
+  app.use(compression());
 
-const requestHandler = octopus.createRequestHandler({
-  dev: process.env.NODE_ENV !== 'production'
-});
+  app.use('/dist', express.static('dist'));
 
-app.get('*', (req, res, next) => {
-  const normalizedPath = req.originalUrl === '/' ? '/index' : req.originalUrl;
-  requestHandler(req, res, normalizedPath);
-});
+  app.get('/favicon.ico', (req, res, next) => {
+    res.sendStatus(404);
+  });
 
-app.listen(PORT, () => {
-  console.log(`application listenin on: http://localhost:${PORT}`);
+  app.get('*', (req, res, next) => {
+    const route = req.originalUrl === '/' ? '/index' : req.originalUrl;
+    octopus.render(req, res, route);
+  });
+
+  app.listen(PORT, () => {
+    console.log(`application listenin on: http://localhost:${PORT}`);
+  });
 });

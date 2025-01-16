@@ -1,19 +1,33 @@
-const webpack = require('webpack');
+const { Worker } = require('worker_threads');
+const path = require('path');
 
-const compiler = webpack([
-  require('./configs/client.config.cjs'),
-  require('./configs/server.config.cjs')
-]);
+const configPaths = ['./configs/client.config.cjs', './configs/server.config.cjs'];
 
-function webpackCompilerHandler(err, stats) {
-  
+function webpackWorker() {
+  const promises = configPaths.map((configPath) => {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(path.resolve(__dirname, 'worker.js'), {
+        workerData: { configPath }
+      });
+
+      worker.on('exit', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Worker failed with code ${code}`));
+        }
+      });
+    });
+  });
+
+  return Promise.all(promises);
 }
 
 module.exports = {
   build: function () {
-    compiler.run(webpackCompilerHandler);
+    return webpackWorker();
   },
   watch: function () {
-    compiler.watch({}, webpackCompilerHandler)
+    return webpackWorker();
   }
 };
