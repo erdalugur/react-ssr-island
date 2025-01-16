@@ -1,17 +1,7 @@
 import React, { Suspense } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import { GlobalState, HydrationConfig, hydrationTypes } from './types';
+import { HydrationConfig, hydrationTypes } from '../hydrator/types';
 
-export function getState(): GlobalState {
-  /* eslint-disable-next-line no-undef */
-  return JSON.parse(window.document.querySelector('#__PRELOADED_STATE__')?.textContent || '{}');
-}
-
-const state = getState();
-if (typeof window !== 'undefined') {
-  /* eslint-disable-next-line no-undef */
-  (window as any).__INITIAL_STATE__ = state;
-}
 
 function withObserver(element: Element, hydrateCallback: (unobserve: () => void) => void) {
   const observer = new IntersectionObserver(([entry]) => {
@@ -22,7 +12,7 @@ function withObserver(element: Element, hydrateCallback: (unobserve: () => void)
   observer.observe(element);
 }
 
-const withSuspense = (container: Element, Component: any, props: any) => {
+const lazyHydrate = (container: Element, Component: any, props: any) => {
   return hydrateRoot(
     container,
     <Suspense fallback={<div />}>
@@ -31,7 +21,7 @@ const withSuspense = (container: Element, Component: any, props: any) => {
   );
 };
 
-export default async function lazyHydrate(componentMap: any): Promise<void> {
+export default async function hydrate(componentMap: any): Promise<void> {
   return new Promise(async (resolve) => {
     /* eslint-disable-next-line no-undef */
     const start = performance.now();
@@ -53,11 +43,11 @@ export default async function lazyHydrate(componentMap: any): Promise<void> {
         }
 
         if (hydrationType === hydrationTypes.domcontentloaded) {
-          withSuspense(container, Component, props);
+          lazyHydrate(container, Component, props);
           continue;
         }
         withObserver(container, (unobserve) => {
-          withSuspense(container, Component, props);
+          lazyHydrate(container, Component, props);
           unobserve();
         });
       }

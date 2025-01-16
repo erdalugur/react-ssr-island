@@ -7,7 +7,6 @@ import {
   manifestLoader
 } from './utils';
 import path from 'path';
-import { setConfig } from '../config';
 
 const root = path.resolve(process.cwd());
 
@@ -23,7 +22,11 @@ let octopusConfig: any
 if (process.env.NODE_ENV === 'production') {
   octopusConfig = getOctopusConfig()
 }
-
+function register(config: Record<string, any>) {
+  Object.keys(config).forEach(key => {
+    process.env[key] = config[key];
+  })
+}
 export function createRequestHandler({ dev }: { dev: boolean}) {
   if (dev) {
     require('../webpack').watch();
@@ -36,13 +39,9 @@ export function createRequestHandler({ dev }: { dev: boolean}) {
       return;
     }
     
-    const { publicRuntimeConfig = {}, serverRuntimeConfig = {} } = octopusConfig || {};
+    const { publicRuntimeConfig = {}, serverRuntimeConfig } = octopusConfig || {};
+    register({ ...publicRuntimeConfig, ...serverRuntimeConfig });
     const outdir = octopusConfig.outdir || path.resolve(root, "dist");
-
-    setConfig({
-      publicRuntimeConfig,
-      serverRuntimeConfig
-    })
 
     const routePath = path.join(outdir, `${item.runtime}`);
     const { Component, Meta, getServerSideProps } = await routeLoader(routePath);
@@ -83,7 +82,6 @@ export function createRequestHandler({ dev }: { dev: boolean}) {
         </head>
         <body>
           <div id="root">${html}</div>
-  
           ${javascripts}
         </body>
       </html>

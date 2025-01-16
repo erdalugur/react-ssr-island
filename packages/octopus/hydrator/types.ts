@@ -21,6 +21,7 @@ export type HydrationConfig = {
 export interface GlobalState {
   page: string;
   chunk: string;
+  runtimeConfig: any
 }
 
 export type HydrationInput = string | HydrationConfig;

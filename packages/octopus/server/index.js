@@ -17,7 +17,6 @@ const server_1 = require("react-dom/server");
 const react_1 = __importDefault(require("react"));
 const utils_1 = require("./utils");
 const path_1 = __importDefault(require("path"));
-const config_1 = require("../config");
 const root = path_1.default.resolve(process.cwd());
 const manifest = (0, utils_1.manifestLoader)('pages-manifest.json');
 const staticManifest = (0, utils_1.manifestLoader)('static-manifest.json');
@@ -26,6 +25,11 @@ const { getOctopusConfig } = require('../webpack/utils');
 let octopusConfig;
 if (process.env.NODE_ENV === 'production') {
     octopusConfig = getOctopusConfig();
+}
+function register(config) {
+    Object.keys(config).forEach(key => {
+        process.env[key] = config[key];
+    });
 }
 function createRequestHandler({ dev }) {
     if (dev) {
@@ -39,12 +43,9 @@ function createRequestHandler({ dev }) {
                 res.sendStatus(404);
                 return;
             }
-            const { publicRuntimeConfig = {}, serverRuntimeConfig = {} } = octopusConfig || {};
+            const { publicRuntimeConfig = {}, serverRuntimeConfig } = octopusConfig || {};
+            register(Object.assign(Object.assign({}, publicRuntimeConfig), serverRuntimeConfig));
             const outdir = octopusConfig.outdir || path_1.default.resolve(root, "dist");
-            (0, config_1.setConfig)({
-                publicRuntimeConfig,
-                serverRuntimeConfig
-            });
             const routePath = path_1.default.join(outdir, `${item.runtime}`);
             const { Component, Meta, getServerSideProps } = yield (0, utils_1.routeLoader)(routePath);
             const assets = staticManifest[route];
@@ -75,7 +76,6 @@ function createRequestHandler({ dev }) {
         </head>
         <body>
           <div id="root">${html}</div>
-  
           ${javascripts}
         </body>
       </html>

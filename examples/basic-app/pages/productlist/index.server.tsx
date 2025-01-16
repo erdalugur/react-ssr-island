@@ -1,6 +1,6 @@
 import '../../src/styles/reset.scss';
 import React from 'react';
-import withCache from 'octopus/hydrator/cache';
+import withCache from 'octopus/server/cache';
 import Header from '../../src/components/Header';
 import ProductCard from '../../src/components/Card';
 import CardContainer from '../../src/components/CardContainer';

@@ -63,6 +63,17 @@ const cssLoader = {
 	}
 };
 
+const sassLoader = {
+  loader: 'sass-loader',
+  options: {
+    implementation: require("sass"),
+    //api: 'legacy',
+    warnRuleAsWarning: false,
+    sassOptions: {
+      //outputStyle: "expanded",
+    },
+  }
+};
 const styleLoaders = [
 	{
 		test: /\.module\.css$/,
@@ -70,7 +81,7 @@ const styleLoaders = [
 	},
 	{
 		test: /\.module\.scss$/,
-		use: [styleLoader, cssLoader, postcssLoader, "sass-loader"]
+		use: [styleLoader, cssLoader, postcssLoader, sassLoader]
 	},
 	{
 		test: /\.css$/,
@@ -80,12 +91,7 @@ const styleLoaders = [
 	{
 		test: /\.scss$/,
 		exclude: /\.module\.scss$/,
-		use: [styleLoader, cssLoader, postcssLoader, "sass-loader"]
-	},
-	{
-		test: /\.json$/,
-		use: ["manifest-loader"],
-		type: "javascript/auto" // Webpack'in json dosyasını doğru şekilde alabilmesi için
+		use: [styleLoader, cssLoader, postcssLoader, sassLoader]
 	}
 ];
 const getStyleLoaders = () => {
