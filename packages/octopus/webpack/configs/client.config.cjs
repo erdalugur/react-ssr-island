@@ -48,8 +48,9 @@ const config = {
 					usedExports: true,
 					minimizer: [
 						new TerserPlugin({
+							parallel: true,
 							terserOptions: {
-								compress: true
+								compress: true,
 							}
 						})
 					]
