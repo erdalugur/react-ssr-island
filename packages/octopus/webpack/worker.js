@@ -1,10 +1,19 @@
 const webpack = require('webpack');
 const { workerData, parentPort } = require('worker_threads');
 const { configPath, mode } = workerData;
+
+process.env.NODE_ENV = mode || "production";
+
+
 const config = require(configPath);
+const compiler = webpack(config);
+if (mode === 'development') {
+  compiler.watch({}, webpackCompilerHandler);
+} else {
+  compiler.run(webpackCompilerHandler);
+}
 
 /**
- * 
  * @param {any} err 
  * @param {webpack.Stats} stats 
  */
@@ -15,10 +24,4 @@ function webpackCompilerHandler(err, stats) {
   } else {
     parentPort.postMessage('Build completed successfully');
   }
-}
-const compiler = webpack(config);
-if (mode === 'watch') {
-  compiler.watch({}, webpackCompilerHandler);
-} else {
-  compiler.run(webpackCompilerHandler);
 }

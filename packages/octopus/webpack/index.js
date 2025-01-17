@@ -35,9 +35,9 @@ function webpackWorker(mode) {
 
 module.exports = {
   build: function () {
-    return webpackWorker('build');
+    return webpackWorker('production');
   },
   watch: function () {
-    return webpackWorker('watch');
+    return webpackWorker('development');
   }
 };
