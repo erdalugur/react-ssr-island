@@ -1,0 +1,54 @@
+@import '../../styles/colors';
+
+.container {
+  background: $primary-500;
+  margin-bottom: 4px;
+  display: flex;
+    font-size: 14px;
+  .headerLeft {
+    grid-auto-flow: row;
+    display: grid;
+    align-items: center;
+    a {
+      font-size: 16px;
+      margin: 0px;
+      text-decoration: none;
+      .logo {
+        margin: 4px 5px 2px 4px;
+        display: inline-block;
+      }
+      .logoText {
+        border: 1px solid #fff;
+        display: inline-block;
+        font-weight: 700;
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+      .siteTitle {
+        display: inline-block;
+        text-decoration: none;
+        color: #000;
+      }
+    }
+    .nav {
+      display: block;
+      margin-left: 10px;
+      vertical-align: top;
+
+      .ul {
+        list-style-type: none;
+        li {
+          display: inline-block;
+        }
+        li:not(:last-child):after {
+          content: " | ";
+          padding-right: 4px;
+        }
+      }
+    }
+  }
+  .headerRight {
+    flex: 1 1;
+    text-align: right;
+  }
+}

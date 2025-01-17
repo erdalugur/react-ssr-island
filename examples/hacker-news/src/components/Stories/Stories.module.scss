@@ -1,0 +1,47 @@
+.storyItem {
+  display: flex;
+  margin: 10px 0;
+
+  .count {
+    flex-basis: auto;
+    flex-grow: 1;
+    font-size: 14px;
+    padding-right: 5px;
+    display: block;
+    width: 12px;
+    text-align: right;
+    &::after {
+      content: '.';
+    }
+  }
+  .story {
+    flex: 100 1;
+    display: inline-block;
+    .storyTitle {
+      font-size: 15px;
+      margin-bottom: 1px;
+      a {
+        color: #000;
+        text-decoration: none;
+      }
+      .storySource {
+        font-size: 12px;
+        display: inline-block;
+        margin-left: 5px;
+      }
+    }
+
+    .meta {
+      font-size: 12px;
+    }
+    .meta,
+    .storySource {
+      a {
+        color: #757575;
+        text-decoration: none;
+      }
+    }
+  }
+}
+.footer {
+}
