@@ -3,11 +3,21 @@ const path = require('path');
 
 const configPaths = ['./configs/client.config.cjs', './configs/server.config.cjs'];
 
-function webpackWorker() {
+/**
+ *
+ * @param {'watch' | 'build'} mode
+ * @returns {Promise<any[]>}
+ */
+function webpackWorker(mode) {
   const promises = configPaths.map((configPath) => {
     return new Promise((resolve, reject) => {
       const worker = new Worker(path.resolve(__dirname, 'worker.js'), {
-        workerData: { configPath }
+        workerData: { configPath, mode }
+      });
+
+      worker.on('message', (v) => {
+        console.log(v);
+        resolve();
       });
 
       worker.on('exit', (code) => {
@@ -25,9 +35,9 @@ function webpackWorker() {
 
 module.exports = {
   build: function () {
-    return webpackWorker();
+    return webpackWorker('build');
   },
   watch: function () {
-    return webpackWorker();
+    return webpackWorker('watch');
   }
 };

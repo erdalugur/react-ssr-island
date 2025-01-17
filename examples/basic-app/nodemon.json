@@ -1,6 +1,0 @@
-{
-  "watch": ["src", "pages"],
-  "ext": "js,ts,tsx,json",
-  "ignore": ["node_modules"],
-  "exec": "node app.js"
-}
