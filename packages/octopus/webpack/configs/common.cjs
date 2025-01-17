@@ -10,8 +10,6 @@ const generateScopedName = (localName, resourcePath) => {
 	return `${localName}__${hash}`;
 };
 
-const isDevelopment = process.env.NODE_ENV !== "production";
-
 const octopusConfig = getOctopusConfig();
 const pagesdir = octopusConfig.pagesdir
 const outdir = octopusConfig.outdir
@@ -23,7 +21,7 @@ const entryLoader = (platform = "server") => {
 		const files = fs.readdirSync(pagesdir);
 		for (const file of files) {
 			const fullPath = path.join(pagesdir, file);
-			entries[file] = file.startsWith("_") ? fullPath : `${fullPath}/index.${platform}.tsx`;
+			entries[file] =`${fullPath}/index.${platform}.tsx`;
 		}
 
 		return entries;

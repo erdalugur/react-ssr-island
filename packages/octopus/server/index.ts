@@ -4,7 +4,6 @@ import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
 import fs from 'fs';
-
 class Server {
   octopusConfig!: OctopusConfig;
   dev: boolean = process.env.NODE_ENV !== 'production';
@@ -13,12 +12,9 @@ class Server {
   styleTagsOrLinks!: Record<string, string>;
   styles: Record<string, string> = {};
   outdir!: string;
-  outdirname!: string
+  outdirname!: string;
   constructor({ dev }: { dev: boolean }) {
-    if (dev) {
-      require('../webpack').watch();
-      this.dev = dev;
-    }
+    this.dev = dev;
   }
 
   register = (config: Record<string, any>) => {
@@ -63,18 +59,7 @@ class Server {
 
     const linkOrStyle = this.styleTagsOrLinks[route];
 
-    const preloadedStateScript = `<script id="__PRELOADED_STATE__" type="application/json">${JSON.stringify(
-      {
-        page: route,
-        chunk: route,
-        runtimeConfig: publicRuntimeConfig
-      }
-    )}</script>`;
-
-    const javascripts = [
-      preloadedStateScript,
-      ...assets.js.map((item: string) => `<script src="/${this.outdirname}${item}"></script>`)
-    ].join('\n');
+    const scripts = this.getScripts(route, publicRuntimeConfig, assets.js);
 
     const document = `
       <html>
@@ -86,7 +71,7 @@ class Server {
         </head>
         <body>
           <div id="root">${html}</div>
-          ${javascripts}
+          ${scripts}
         </body>
       </html>
     `;
@@ -96,6 +81,22 @@ class Server {
   manifestLoader = async (m: string) => {
     return import(path.join(this.outdir, m));
   };
+
+  getScripts = (route: string, publicRuntimeConfig: any, js: string[]) => {
+    const data = JSON.stringify({
+      page: route,
+      chunk: route,
+      runtimeConfig: publicRuntimeConfig
+    });
+
+    const preloadedState = `<script id="__PRELOADED_STATE__" type="application/json">${data}</script>`;
+
+    return [
+      preloadedState,
+      ...js.map((item: string) => `<script defer src="/${this.outdirname}${item}"></script>`)
+    ].join('\n');
+  };
+  
   prepare = async () => {
     if (this.dev) {
       const { watch } = require('../webpack');

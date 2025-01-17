@@ -86,15 +86,7 @@ class Server {
             const html = (0, server_1.renderToString)(react_1.default.createElement(Component, pageProps.props));
             const metaTags = (0, server_1.renderToString)(react_1.default.createElement(Meta, pageProps.props));
             const linkOrStyle = this.styleTagsOrLinks[route];
-            const preloadedStateScript = `<script id="__PRELOADED_STATE__" type="application/json">${JSON.stringify({
-                page: route,
-                chunk: route,
-                runtimeConfig: publicRuntimeConfig
-            })}</script>`;
-            const javascripts = [
-                preloadedStateScript,
-                ...assets.js.map((item) => `<script src="/${this.outdirname}${item}"></script>`)
-            ].join('\n');
+            const scripts = this.getScripts(route, publicRuntimeConfig, assets.js);
             const document = `
       <html>
         <head>
@@ -105,7 +97,7 @@ class Server {
         </head>
         <body>
           <div id="root">${html}</div>
-          ${javascripts}
+          ${scripts}
         </body>
       </html>
     `;
@@ -114,6 +106,18 @@ class Server {
         this.manifestLoader = (m) => __awaiter(this, void 0, void 0, function* () {
             return Promise.resolve(`${path_1.default.join(this.outdir, m)}`).then(s => __importStar(require(s)));
         });
+        this.getScripts = (route, publicRuntimeConfig, js) => {
+            const data = JSON.stringify({
+                page: route,
+                chunk: route,
+                runtimeConfig: publicRuntimeConfig
+            });
+            const preloadedState = `<script id="__PRELOADED_STATE__" type="application/json">${data}</script>`;
+            return [
+                preloadedState,
+                ...js.map((item) => `<script defer src="/${this.outdirname}${item}"></script>`)
+            ].join('\n');
+        };
         this.prepare = () => __awaiter(this, void 0, void 0, function* () {
             if (this.dev) {
                 const { watch } = require('../webpack');
@@ -132,10 +136,7 @@ class Server {
         this.getRequestHandler = (req, res) => __awaiter(this, void 0, void 0, function* () {
             return () => { };
         });
-        if (dev) {
-            require('../webpack').watch();
-            this.dev = dev;
-        }
+        this.dev = dev;
     }
     getStyleTagOrLinks(manifest) {
         if (Object.keys(this.styles).length > 0)
