@@ -9,6 +9,8 @@ function mergeConfig(config) {
   config.pagesdir = config.pagesdir || pagesdir;
   config.serverRuntimeConfig = config.serverRuntimeConfig || {};
   config.publicRuntimeConfig = config.publicRuntimeConfig || {};
+  const names = config.outdir.split('/');
+  config.outdirname = names[names.length - 1];
   return config;
 }
 

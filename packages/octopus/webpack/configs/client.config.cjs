@@ -23,7 +23,8 @@ const config = {
   entry: entries,
   output: {
     path: outdir,
-    filename: 'static/js/[name]/main.[chunkhash].js'
+    filename: 'static/js/[name]/main.[chunkhash].js',
+    publicPath: `/${octopusConfig.outdirname}/`
   },
   devtool: isDevelopment ? 'eval-source-map' : false,
   resolve: {

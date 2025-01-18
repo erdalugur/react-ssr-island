@@ -1,5 +1,5 @@
-const { defineConfig } = require('octopus/config');
-const path = require('path');
+const { defineConfig } = require('octopus');
+
 module.exports = defineConfig({
   publicRuntimeConfig: {
     IMAGE_URL: 'https://www.w3schools.com'

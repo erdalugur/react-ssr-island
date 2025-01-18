@@ -10,8 +10,10 @@
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
+		"declarationDir": "compiled",
+		"outDir": "compiled",
 		"declaration": true,
 		"types": ["node"]
 	},
-	"include": ["./server/**/*"]
+	"include": ["src/**/*"]
 }

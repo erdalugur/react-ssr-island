@@ -1,8 +1,7 @@
 const express = require('express');
 const compression = require('compression');
-const createServer = require('octopus/server').default;
-const isomorphicFetch = require('isomorphic-fetch');
-fetch = isomorphicFetch;
+const { createServer } = require('octopus');
+
 const PORT = process.env.PORT || 3000;
 const dev = process.env.NODE_ENV !== 'production';
 
