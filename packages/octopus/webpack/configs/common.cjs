@@ -1,14 +1,7 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
-const crypto = require('crypto');
 const fs = require('fs');
 const { getOctopusConfig } = require('../utils');
-
-const generateScopedName = (localName, resourcePath) => {
-  const getHash = (value) => crypto.createHash('sha256').update(value).digest('hex');
-  const hash = getHash(`${resourcePath}${localName}`).slice(0, 5);
-  return `${localName}__${hash}`;
-};
 
 const octopusConfig = getOctopusConfig();
 const pagesdir = octopusConfig.pagesdir;
@@ -64,7 +57,7 @@ const cssLoader = {
     modules: {
       auto: true,
       exportOnlyLocals: false,
-      getLocalIdent: ({ resourcePath }, _, localName) => generateScopedName(localName, resourcePath)
+      localIdentName: "[local]__[hash:base64:5]",
     },
     esModule: false
   }
@@ -139,14 +132,13 @@ const getMiniCssExtractPlugin = (client = false) => {
 
 const extensions = ['.tsx', '.ts', '.js', '.css'];
 
-const getManifest = () => {
-  try {
-    return JSON.parse(
-      fs.readFileSync(path.resolve('dist', 'manifest.json'), { encoding: 'utf-8' }) || '{}'
-    );
-  } catch (error) {
-    return {};
-  }
+const getAppAliases = () => {
+  return {
+    react: 'preact/compat',
+    'react-dom/test-utils': 'preact/test-utils',
+    'react-dom': 'preact/compat',
+    'react/jsx-runtime': 'preact/jsx-runtime'
+  };
 };
 
 module.exports = {
@@ -155,8 +147,8 @@ module.exports = {
   getStyleLoaders,
   getMiniCssExtractPlugin,
   extensions,
-  getManifest,
   pagesdir,
   outdir,
-  octopusConfig
+  octopusConfig,
+  getAppAliases
 };

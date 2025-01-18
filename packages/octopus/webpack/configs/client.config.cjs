@@ -8,7 +8,8 @@ const {
   getMiniCssExtractPlugin,
   getStyleLoaders,
   outdir,
-  octopusConfig
+  octopusConfig,
+  getAppAliases
 } = require('./common.cjs');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -24,17 +25,14 @@ const config = {
   output: {
     path: outdir,
     filename: 'static/js/[name]/main.[chunkhash].js',
-    publicPath: `/${octopusConfig.outdirname}/`
+    publicPath: octopusConfig.assetPrefix
+      ? `${octopusConfig.assetPrefix}/`
+      : `/${octopusConfig.outdirname}/`
   },
   devtool: isDevelopment ? 'eval-source-map' : false,
   resolve: {
     extensions: extensions,
-    alias: {
-      react: 'preact/compat',
-      'react-dom/test-utils': 'preact/test-utils',
-      'react-dom': 'preact/compat', // Must be below test-utils
-      'react/jsx-runtime': 'preact/jsx-runtime'
-    }
+    alias: getAppAliases()
   },
   module: {
     rules: [...getStyleLoaders(), getJavascriptLoaders()]
@@ -84,4 +82,5 @@ const config = {
     })
   ]
 };
-module.exports = config;
+const fn = octopusConfig.webpack || ((c) => c);
+module.exports = fn(config, { isServer: false });

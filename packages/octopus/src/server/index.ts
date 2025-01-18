@@ -1,5 +1,5 @@
 import { renderToString as rts } from 'react-dom/server';
-import {createElement as ce, Fragment as F} from 'react';
+import { createElement as ce, Fragment as F } from 'react';
 import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
@@ -13,7 +13,7 @@ class OctopusServer {
   styleTagsOrLinks!: Record<string, string>;
   styles: Record<string, string> = {};
   outdir!: string;
-  outdirname!: string;
+  assetPrefix!: string;
   constructor({ dev }: { dev: boolean }) {
     this.dev = dev;
   }
@@ -57,7 +57,7 @@ class OctopusServer {
 
     const linkOrStyle = this.styleTagsOrLinks[route];
 
-    const scripts = this.getScripts(route, assets?.js || []);
+    const scripts = this.getScripts(route, assets?.js || []);
 
     const document = `
       <html>
@@ -91,7 +91,7 @@ class OctopusServer {
 
     return [
       preloadedState,
-      ...js.map((item: string) => `<script defer src="/${this.outdirname}${item}"></script>`)
+      ...js.map((item: string) => `<script defer src="${this.assetPrefix}${item}"></script>`)
     ].join('\n');
   };
 
@@ -106,7 +106,7 @@ class OctopusServer {
     this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
 
     this.outdir = config.outdir as string;
-    this.outdirname = config.outdirname;
+    this.assetPrefix = config.assetPrefix;
     this.serverManifest = await this.manifestLoader('pages-manifest.json');
     this.clientManifest = await this.manifestLoader('static-manifest.json');
     this.styleTagsOrLinks = this.getStyleTagOrLinks(this.serverManifest);
@@ -129,7 +129,7 @@ class OctopusServer {
         this.styles[key] = _styles.join(`\n`);
       } else {
         this.styles[key] = css
-          .map((item) => `<link rel="stylesheet" href="/${this.outdirname}${item}"/>`)
+          .map((item) => `<link rel="stylesheet" href="${this.assetPrefix}${item}"/>`)
           .join('\n');
       }
     });

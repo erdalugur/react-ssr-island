@@ -8,7 +8,8 @@ const {
   getStyleLoaders,
   extensions,
   outdir,
-  octopusConfig
+  octopusConfig,
+  getAppAliases
 } = require('./common.cjs');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -20,12 +21,9 @@ const config = {
   name: 'server',
   mode: isDevelopment ? 'development' : 'production',
   target: 'node',
-
-  entry: {
-    ...entries
-  },
+  entry: entries,
   optimization: {
-    splitChunks: false // Split chunks özelliğini kapatır
+    splitChunks: false
   },
   output: {
     path: outdir,
@@ -41,7 +39,8 @@ const config = {
       'isomorphic-fetch': {
         mainFields: ['main', 'module']
       }
-    }
+    },
+    alias: getAppAliases()
   },
   module: {
     rules: [...getStyleLoaders(), getJavascriptLoaders()]
@@ -76,4 +75,5 @@ const config = {
   ],
   externals: [require('webpack-node-externals')(), { react: 'react', 'react-dom': 'react-dom' }]
 };
-module.exports = config;
+const fn = octopusConfig.webpack || ((c) => c);
+module.exports = fn(config, { isServer: true });
