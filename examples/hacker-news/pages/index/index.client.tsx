@@ -1,7 +1,7 @@
 import 'octopus/client/polyfill';
 import hydrate from "octopus/client";
-import { lazy } from 'react'
+import Vote from '../../src/components/Vote';
 
 hydrate({
-  vote: lazy(() => import('../../src/components/Vote'))
+  vote: Vote
 })

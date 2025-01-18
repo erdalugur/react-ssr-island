@@ -5,7 +5,7 @@ import classes from './Stories.module.scss';
 import withHydrate from 'octopus/hoc/hydrator';
 
 const HydratedVote = withHydrate(Vote, 'vote', 'span');
-export default function Stories({ stories, page }: { stories: Story[], page: number }) {
+export default function Stories({ stories, page }: { stories: Story[]; page: number }) {
   return (
     <div>
       {stories.map(({ score, date, id, commentsCount, title, url, user }, i) => (
