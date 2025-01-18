@@ -2,7 +2,6 @@ import React, { Suspense } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydrationConfig, hydrationTypes } from '../hoc/types';
 
-
 function withObserver(element: Element, hydrateCallback: (unobserve: () => void) => void) {
   const observer = new IntersectionObserver(([entry]) => {
     if (entry.isIntersecting) {
@@ -21,15 +20,17 @@ const lazyHydrate = (container: Element, Component: any, props: any) => {
   );
 };
 
-export default async function hydrate(componentMap: any): Promise<void> {
+export default async function hydrate(
+  componentMap: any,
+  nodes: NodeListOf<HTMLElement> = window.document.querySelectorAll(
+    '[data-island]'
+  ) as NodeListOf<HTMLElement>
+): Promise<void> {
   return new Promise(async (resolve) => {
     /* eslint-disable-next-line no-undef */
     const start = performance.now();
-
-    /* eslint-disable-next-line no-undef */
-    const items = window.document.querySelectorAll('[data-island]') as NodeListOf<HTMLElement>;
-    for (let index = 0; index < items.length; index++) {
-      const container = items[index];
+    for (let index = 0; index < nodes.length; index++) {
+      const container = nodes[index];
       const m = container.dataset.island;
       if (m) {
         const { name, hydrationType, props }: HydrationConfig & { props: any } = JSON.parse(m);

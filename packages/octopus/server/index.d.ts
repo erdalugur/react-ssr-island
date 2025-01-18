@@ -20,7 +20,7 @@ declare class Server {
     }>;
     render: (req: Request, res: Response, route: string) => Promise<void>;
     manifestLoader: (m: string) => Promise<any>;
-    getScripts: (route: string, publicRuntimeConfig: any, js: string[]) => string;
+    getScripts: (route: string, js: string[]) => string;
     prepare: () => Promise<void>;
     getStyleTagOrLinks(manifest: Record<string, {
         runtime: string;

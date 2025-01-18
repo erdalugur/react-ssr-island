@@ -1,5 +1,5 @@
-import { renderToString } from 'react-dom/server';
-import React from 'react';
+import { renderToString as rts } from 'react-dom/server';
+import {createElement as ce, Fragment as F} from 'react';
 import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
@@ -27,7 +27,7 @@ class Server {
     const mod = await import(route);
     return {
       Component: mod.default,
-      Meta: mod?.Meta || (() => React.createElement(React.Fragment)),
+      Meta: mod?.Meta || (() => ce(F)),
       getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} }))
     };
   };
@@ -39,11 +39,8 @@ class Server {
       return;
     }
 
-    const { publicRuntimeConfig, serverRuntimeConfig } = this.octopusConfig;
-
-    this.register({ ...publicRuntimeConfig, ...serverRuntimeConfig });
-
     const routePath = path.join(this.outdir, `${item.runtime}`);
+
     const { Component, Meta, getServerSideProps } = await this.routeLoader(routePath);
 
     const assets = this.clientManifest[route];
@@ -54,12 +51,12 @@ class Server {
     }
 
     const pageProps = await getServerSideProps({ req, res });
-    const html = renderToString(React.createElement(Component, pageProps.props));
-    const metaTags = renderToString(React.createElement(Meta, pageProps.props));
+    const html = rts(ce(Component, pageProps.props));
+    const metaTags = rts(ce(Meta, pageProps.props));
 
     const linkOrStyle = this.styleTagsOrLinks[route];
 
-    const scripts = this.getScripts(route, publicRuntimeConfig, assets.js);
+    const scripts = this.getScripts(route, assets?.js || []);
 
     const document = `
       <html>
@@ -82,11 +79,11 @@ class Server {
     return import(path.join(this.outdir, m));
   };
 
-  getScripts = (route: string, publicRuntimeConfig: any, js: string[]) => {
+  getScripts = (route: string, js: string[]) => {
     const data = JSON.stringify({
       page: route,
       chunk: route,
-      runtimeConfig: publicRuntimeConfig
+      runtimeConfig: this.octopusConfig.publicRuntimeConfig
     });
 
     const preloadedState = `<script id="__PRELOADED_STATE__" type="application/json">${data}</script>`;
@@ -96,15 +93,18 @@ class Server {
       ...js.map((item: string) => `<script defer src="/${this.outdirname}${item}"></script>`)
     ].join('\n');
   };
-  
+
   prepare = async () => {
     if (this.dev) {
       const { watch } = require('../webpack');
       await watch();
     }
     const { getOctopusConfig } = require('../webpack/utils');
-    this.octopusConfig = getOctopusConfig();
-    this.outdir = this.octopusConfig.outdir as string;
+    const config = getOctopusConfig();
+    this.octopusConfig = config;
+    this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
+
+    this.outdir = config.outdir as string;
     const names = this.outdir.split('/');
     this.outdirname = names[names.length - 1];
     this.serverManifest = await this.manifestLoader('pages-manifest.json');

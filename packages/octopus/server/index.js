@@ -73,8 +73,6 @@ class Server {
                 res.sendStatus(404);
                 return;
             }
-            const { publicRuntimeConfig, serverRuntimeConfig } = this.octopusConfig;
-            this.register(Object.assign(Object.assign({}, publicRuntimeConfig), serverRuntimeConfig));
             const routePath = path_1.default.join(this.outdir, `${item.runtime}`);
             const { Component, Meta, getServerSideProps } = yield this.routeLoader(routePath);
             const assets = this.clientManifest[route];
@@ -86,7 +84,7 @@ class Server {
             const html = (0, server_1.renderToString)(react_1.default.createElement(Component, pageProps.props));
             const metaTags = (0, server_1.renderToString)(react_1.default.createElement(Meta, pageProps.props));
             const linkOrStyle = this.styleTagsOrLinks[route];
-            const scripts = this.getScripts(route, publicRuntimeConfig, assets.js);
+            const scripts = this.getScripts(route, (assets === null || assets === void 0 ? void 0 : assets.js) || []);
             const document = `
       <html>
         <head>
@@ -106,11 +104,11 @@ class Server {
         this.manifestLoader = (m) => __awaiter(this, void 0, void 0, function* () {
             return Promise.resolve(`${path_1.default.join(this.outdir, m)}`).then(s => __importStar(require(s)));
         });
-        this.getScripts = (route, publicRuntimeConfig, js) => {
+        this.getScripts = (route, js) => {
             const data = JSON.stringify({
                 page: route,
                 chunk: route,
-                runtimeConfig: publicRuntimeConfig
+                runtimeConfig: this.octopusConfig.publicRuntimeConfig
             });
             const preloadedState = `<script id="__PRELOADED_STATE__" type="application/json">${data}</script>`;
             return [
@@ -124,8 +122,10 @@ class Server {
                 yield watch();
             }
             const { getOctopusConfig } = require('../webpack/utils');
-            this.octopusConfig = getOctopusConfig();
-            this.outdir = this.octopusConfig.outdir;
+            const config = getOctopusConfig();
+            this.octopusConfig = config;
+            this.register(Object.assign(Object.assign({}, config.publicRuntimeConfig), config.serverRuntimeConfig));
+            this.outdir = config.outdir;
             const names = this.outdir.split('/');
             this.outdirname = names[names.length - 1];
             this.serverManifest = yield this.manifestLoader('pages-manifest.json');
