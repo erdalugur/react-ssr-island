@@ -126,7 +126,7 @@ const getJavascriptLoaders = () => {
 const getMiniCssExtractPlugin = (client = false) => {
   return new MiniCssExtractPlugin({
     filename: client ? 'static/client/[name]/[name].css' : 'static/css/[name]/[name].css',
-    chunkFilename: client ? 'static/client/[name]/[name].css' : 'static/css/[name]/[name].css'
+    chunkFilename: client ? 'static/chunk/[chunkhash].css' : 'static/css/[name]/[name].css'
   });
 };
 

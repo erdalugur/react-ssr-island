@@ -65,16 +65,18 @@ const config = {
         for (let index = 0; index < files.length; index++) {
           const item = files[index];
           const ext = path.extname(item.name);
-          const route = item.name.replace(ext, '');
-          const normalizeRoute = `/${route}`;
+          const entry = item.name.replace(ext, '');
+          const route = `/${entry}`;
           const asset = ext.replace('.', '');
-          if (!manifest[normalizeRoute]) {
-            manifest[normalizeRoute] = {
-              js: []
-            };
-          }
-          if (ext === '.js') {
-            manifest[normalizeRoute][asset].push(item.path);
+          if (entries[entry]) {
+            if (!manifest[route]) {
+              manifest[route] = {
+                js: []
+              };
+            }
+            if (ext === '.js') {
+              manifest[route][asset].push(item.path);
+            }
           }
         }
         return manifest;

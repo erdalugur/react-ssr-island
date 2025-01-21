@@ -50,23 +50,26 @@ const config = {
     new WebpackManifestPlugin({
       fileName: 'pages-manifest.json',
       publicPath: '/',
-      generate: (seed, files, entrypoints) => {
+      generate: (seed, files) => {
         const current = {};
         for (let index = 0; index < files.length; index++) {
           const item = files[index];
           const ext = path.extname(item.name);
-          const route = `/${item.name.replace(ext, '')}`;
-          if (!current[route]) {
-            current[route] = {
-              runtime: '',
-              css: []
-            };
-          }
-          if (ext === '.cjs') {
-            current[route].runtime = item.path;
-          }
-          if (ext === '.css') {
-            current[route].css.push(item.path);
+          const entry = item.name.replace(ext, '');
+          const route = `/${entry}`;
+          if (entries[entry]) {
+            if (!current[route]) {
+              current[route] = {
+                runtime: '',
+                css: []
+              };
+            }
+            if (ext === '.cjs') {
+              current[route].runtime = item.path;
+            }
+            if (ext === '.css') {
+              current[route].css.push(item.path);
+            }
           }
         }
         return current;
