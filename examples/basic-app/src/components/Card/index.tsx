@@ -20,10 +20,10 @@ export default function ProductCard(props: Props) {
         src={`${process.env.IMAGE_URL}/${props.img}`}
         alt="Denim Jeans"
       />
-      <h1>{props.price}</h1>
-      <p className={classes.price}>${props.title}</p>
+      <h1>${props.price}</h1>
+      <p className={classes.price}>{props.title}</p>
       <p>{props.description}</p>
-      <LazyAddToCart price={props.price} id={props.id} />
+      <LazyAddToCart price={props.price} id={props.id} title={props.title} />
     </div>
   );
 }

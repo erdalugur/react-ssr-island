@@ -1,4 +1,4 @@
-.container {
+.backdrop {
   display: flex;
   position: absolute;
   bottom: 0;
@@ -6,4 +6,28 @@
   right: 0;
   top: 0;
   background: #000000a8;
+}
+.content {
+  width: 100%;
+  height: 80vh;
+  bottom: 0;
+  position: absolute;
+  background: #fff;
+
+  ul {
+    padding: 0;
+    list-style: none;
+    margin: 10px;
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+    }
+  }
 }

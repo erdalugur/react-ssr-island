@@ -28,7 +28,7 @@ export default function Page(props: { products: any[] }) {
 }
 
 function getRandomTitle(index: number) {
-  return `Denim Jeans`;
+  return `Denim Jeans ${index}`;
 }
 
 function getRandomDescription() {

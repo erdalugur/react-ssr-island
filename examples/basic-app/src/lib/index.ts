@@ -24,7 +24,7 @@ class Observable<T> {
   }
 }
 
-type CartItem = {
+export type CartItem = {
   id: number;
   name: string;
   price: number;
