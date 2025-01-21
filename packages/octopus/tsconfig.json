@@ -6,7 +6,7 @@
 		"target": "ES6",
     "module": "CommonJS",
 		"moduleResolution": "node",
-		"jsx": "preserve",
+		"jsx": "react",
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",

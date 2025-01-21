@@ -1,16 +1,15 @@
-import { renderToString as rts } from 'react-dom/server';
-import { createElement as ce, Fragment as F } from 'react';
+import { renderToString } from 'react-dom/server';
+import React from 'react';
 import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
-import fs from 'fs';
+import { Main, Meta, Provider, Scripts, Styles } from '../document';
 
 class OctopusServer {
   octopusConfig!: OctopusConfig;
   dev: boolean = process.env.NODE_ENV !== 'production';
   serverManifest: any;
   clientManifest: any;
-  styleTagsOrLinks!: Record<string, string>;
   styles: Record<string, string> = {};
   outdir!: string;
   assetPrefix!: string;
@@ -24,15 +23,35 @@ class OctopusServer {
     });
   };
 
+  document = () => {
+    return (
+      <html>
+        <head>
+          <meta charSet="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <Meta />
+          <Styles />
+        </head>
+        <body>
+          <Main />
+          <Scripts />
+        </body>
+      </html>
+    );
+  }
+
   routeLoader = async (route: string) => {
     const mod = await import(route);
     return {
       Component: mod.default,
-      Meta: mod?.Meta || (() => ce(F)),
+      Meta: mod?.Meta || (() => null),
       getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} }))
     };
   };
 
+  getDocument = async () => {
+    return this.document;
+  };
   render = async (req: Request, res: Response, route: string) => {
     const item = this.serverManifest[route];
     if (!item || (item && !item.runtime)) {
@@ -52,47 +71,31 @@ class OctopusServer {
     }
 
     const pageProps = await getServerSideProps({ req, res });
-    const html = rts(ce(Component, pageProps.props));
-    const metaTags = rts(ce(Meta, pageProps.props));
 
-    const linkOrStyle = this.styleTagsOrLinks[route];
-
-    const scripts = this.getScripts(route, assets?.js || []);
-
-    const document = `
-      <html>
-        <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        ${metaTags}
-        ${linkOrStyle}
-        </head>
-        <body>
-          <div id="root">${html}</div>
-          ${scripts}
-        </body>
-      </html>
-    `;
-    res.send(document);
+    const Document = await this.getDocument();
+    
+    res.send(
+      renderToString(
+        <Provider
+          value={{
+            dev: this.dev,
+            Component,
+            css: item.css || [],
+            pageProps,
+            Meta,
+            assetPrefix: this.assetPrefix,
+            scripts: assets?.js || [],
+            octopusConfig: this.octopusConfig
+          }}
+        >
+          <Document />
+        </Provider>
+      )
+    );
   };
 
   manifestLoader = async (m: string) => {
     return import(path.join(this.outdir, m));
-  };
-
-  getScripts = (route: string, js: string[]) => {
-    const data = JSON.stringify({
-      page: route,
-      chunk: route,
-      runtimeConfig: this.octopusConfig.publicRuntimeConfig
-    });
-
-    const preloadedState = `<script id="__PRELOADED_STATE__" type="application/json">${data}</script>`;
-
-    return [
-      preloadedState,
-      ...js.map((item: string) => `<script defer src="${this.assetPrefix}${item}"></script>`)
-    ].join('\n');
   };
 
   prepare = async () => {
@@ -109,32 +112,8 @@ class OctopusServer {
     this.assetPrefix = config.assetPrefix;
     this.serverManifest = await this.manifestLoader('pages-manifest.json');
     this.clientManifest = await this.manifestLoader('static-manifest.json');
-    this.styleTagsOrLinks = this.getStyleTagOrLinks(this.serverManifest);
     return Promise.resolve();
   };
-
-  getStyleTagOrLinks(manifest: Record<string, { runtime: string; css: string[] }>) {
-    if (Object.keys(this.styles).length > 0) return this.styles;
-
-    Object.keys(manifest).forEach((key) => {
-      const css: string[] = manifest[key].css || [];
-
-      if (!this.dev) {
-        const _styles: string[] = [];
-        css.forEach((s) => {
-          const p = path.join(this.outdir, `${s}`);
-          const style = fs.readFileSync(p, { encoding: 'utf-8' });
-          _styles.push(`<style>${style}</style>`);
-        });
-        this.styles[key] = _styles.join(`\n`);
-      } else {
-        this.styles[key] = css
-          .map((item) => `<link rel="stylesheet" href="${this.assetPrefix}${item}"/>`)
-          .join('\n');
-      }
-    });
-    return this.styles;
-  }
 
   getRequestHandler = async (req: Request, res: Response) => {
     return () => {};
