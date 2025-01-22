@@ -82,8 +82,8 @@ class OctopusServer {
   };
 
   getStyles = (css: string[]) => {
-    const { assetPrefix, outdir } = this.octopusConfig;
-    if (this.dev)
+    const { assetPrefix, outdir, inlineCss } = this.octopusConfig;
+    if (!inlineCss)
       return css.map((s: string) => <link key={s} rel="stylesheet" href={`${assetPrefix}${s}`} />);
 
     return css.map((s) => {
@@ -95,7 +95,7 @@ class OctopusServer {
       return <style dangerouslySetInnerHTML={{ __html: styles[s] }} />;
     });
   };
-  
+
   render = async (req: Request, res: Response, route: string) => {
     const item = this.serverManifest[route];
     if (!item || (item && !item.runtime)) {

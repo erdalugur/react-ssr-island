@@ -21,7 +21,7 @@ const entryLoader = (platform = 'server') => {
         const relativePath = path.relative(pagesdir, fullPath);
         const entryKey = relativePath.replace(/\\/g, '/').replace(`/index.${platform}.tsx`, ''); // Cross-platform için normalize edilmiş key
         entries[entryKey] = fullPath;
-      } else if (file.isFile() && file.name === `_document.tsx`) {
+      } else if (file.isFile() && platform === 'server' && file.name === `_document.tsx`) {
         const relativePath = path.relative(pagesdir, fullPath);
         const entryKey = relativePath.replace('.tsx', '');
         entries[entryKey] = fullPath;
@@ -61,7 +61,7 @@ const cssLoader = {
     modules: {
       auto: true,
       exportOnlyLocals: false,
-      localIdentName: "[local]__[hash:base64:5]",
+      localIdentName: '[local]__[hash:base64:5]'
     },
     esModule: false
   }

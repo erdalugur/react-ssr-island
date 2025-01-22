@@ -6,10 +6,8 @@ export interface OctopusConfig {
   clientEntries?: string[];
   serverEntries?: string[];
   assetPrefix?: string;
-  webpack?: (
-    config: any,
-    options: { isServer: boolean; buildId: string }
-  ) => OctopusConfig;
+  webpack?: (config: any, options: { isServer: boolean; buildId: string }) => OctopusConfig;
+  inlineCss?: boolean;
 }
 export function defineConfig(config: OctopusConfig) {
   return config;
