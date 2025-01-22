@@ -21,6 +21,10 @@ const entryLoader = (platform = 'server') => {
         const relativePath = path.relative(pagesdir, fullPath);
         const entryKey = relativePath.replace(/\\/g, '/').replace(`/index.${platform}.tsx`, ''); // Cross-platform için normalize edilmiş key
         entries[entryKey] = fullPath;
+      } else if (file.isFile() && file.name === `_document.tsx`) {
+        const relativePath = path.relative(pagesdir, fullPath);
+        const entryKey = relativePath.replace('.tsx', '');
+        entries[entryKey] = fullPath;
       }
     }
   };
