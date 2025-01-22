@@ -1,6 +1,7 @@
 const express = require('express');
 const compression = require('compression');
 const { createServer } = require('octopus');
+const { parse } = require('url');
 
 const PORT = process.env.PORT || 3000;
 const dev = process.env.NODE_ENV !== 'production';
@@ -22,7 +23,8 @@ octopus.prepare().then(() => {
   });
 
   app.get('*', (req, res, next) => {
-    const route = req.originalUrl === '/' ? '/index' : req.originalUrl;
+    const { pathname } = parse(req.originalUrl, true);
+    const route = pathname === '/' ? '/index' : pathname;
     octopus.render(req, res, route);
   });
 

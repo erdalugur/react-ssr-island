@@ -1,4 +1,3 @@
-
 html {
   box-sizing: border-box;
 }
@@ -6,13 +5,31 @@ html {
 html,
 body {
   background: #fff;
-  font-family: var(--inter-font);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    Fira Sans,
+    Droid Sans,
+    Helvetica Neue,
+    sans-serif;
   padding: 0;
   margin: 0;
   -webkit-text-size-adjust: none;
+  color: #333;
 }
 body {
   overflow-x: hidden;
+}
+*,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 *,
 *:before,

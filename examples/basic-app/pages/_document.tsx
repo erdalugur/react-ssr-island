@@ -1,5 +1,7 @@
-export default function Document(props: any) {
-  const { main: Main, styles: Styles, meta: Meta, scripts: Scripts, pageProps } = props;
+import { DocumentProps } from 'octopus/page';
+
+export default function Document(props: DocumentProps) {
+  const { main: Main, styles: Styles, meta: Meta, scripts: Scripts } = props;
   return (
     <html>
       <head>
