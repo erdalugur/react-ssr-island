@@ -7,6 +7,8 @@ const octopusConfig = getOctopusConfig();
 const pagesdir = octopusConfig.pagesdir;
 const outdir = octopusConfig.outdir;
 
+const octopusDir = path.join(__dirname, '../..');
+
 const entryLoader = (platform = 'server') => {
   const entries = {};
   const loadEntries = (currentDir) => {
@@ -21,20 +23,35 @@ const entryLoader = (platform = 'server') => {
         const relativePath = path.relative(pagesdir, fullPath);
         const entryKey = relativePath.replace(/\\/g, '/').replace(`/index.${platform}.tsx`, ''); // Cross-platform için normalize edilmiş key
         entries[entryKey] = fullPath;
-      } else if (file.isFile() && platform === 'server' && file.name === `_document.tsx`) {
-        const relativePath = path.relative(pagesdir, fullPath);
-        const entryKey = relativePath.replace('.tsx', '');
-        entries[entryKey] = fullPath;
       }
     }
   };
   try {
     loadEntries(pagesdir);
+    entries['_error'] = entries['_error'] || path.join(octopusDir, 'document/_error.tsx');
     return entries;
   } catch (error) {
     console.error('Hata oluştu:', error);
     throw error;
   }
+};
+
+const extraLoader = () => {
+  const keys = ['_document.tsx'];
+  const entries = {};
+  const files = fs.readdirSync(pagesdir, { withFileTypes: true });
+  for (const file of files) {
+    const fullPath = path.join(pagesdir, file.name);
+
+    if (file.isFile() && keys.includes(file.name)) {
+      const relativePath = path.relative(pagesdir, fullPath);
+      const entryKey = relativePath.replace('.tsx', '');
+      entries[entryKey] = fullPath;
+    }
+  }
+  return {
+    _document: entries['_document'] || path.join(octopusDir, 'document/index.tsx')
+  };
 };
 
 const styleLoader = MiniCssExtractPlugin.loader;
@@ -154,5 +171,6 @@ module.exports = {
   pagesdir,
   outdir,
   octopusConfig,
-  getAppAliases
+  getAppAliases,
+  extraLoader
 };

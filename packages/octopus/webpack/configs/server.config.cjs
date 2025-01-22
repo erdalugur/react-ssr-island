@@ -9,12 +9,16 @@ const {
   extensions,
   outdir,
   octopusConfig,
-  getAppAliases
+  getAppAliases,
+  extraLoader
 } = require('./common.cjs');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-const entries = octopusConfig.serverEntries || entryLoader('server');
+const entries = octopusConfig.serverEntries || {
+  ...entryLoader('server'),
+  ...extraLoader()
+};
 
 /** @type { import('webpack').Configuration } */
 const config = {

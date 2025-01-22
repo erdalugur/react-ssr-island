@@ -1,9 +1,17 @@
 import { renderToString } from 'react-dom/server';
-import React from 'react';
+import React, { JSX } from 'react';
 import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
 import fs from 'fs';
+import { Context, DocumentProps } from '../page';
+
+interface RouteLoaderProps {
+  Component: (props: DocumentProps) => JSX.Element;
+  Meta: () => JSX.Element;
+  getServerSideProps: (ctx: Context) => any;
+  assets: { js: string[]; css: string[] };
+}
 
 const styles: Record<string, string> = {};
 class OctopusServer {
@@ -14,6 +22,9 @@ class OctopusServer {
   styles: Record<string, string> = {};
   outdir!: string;
   assetPrefix!: string;
+  document!: RouteLoaderProps;
+  errorPage!: RouteLoaderProps;
+
   constructor({ dev }: { dev: boolean }) {
     this.dev = dev;
   }
@@ -24,41 +35,35 @@ class OctopusServer {
     });
   };
 
-  document = (props: any) => {
-    const { main: Main, styles: Styles, meta: Meta, scripts: Scripts } = props;
-    return (
-      <html>
-        <head>
-          <meta charSet="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <Meta />
-          <Styles />
-        </head>
-        <body>
-          <Main />
-          <Scripts />
-        </body>
-      </html>
-    );
-  };
+  routeLoader = async (
+    req: Request,
+    res: Response,
+    route: string
+  ): Promise<RouteLoaderProps | null> => {
+    const item = this.serverManifest[route];
+    if (!item) {
+      res.statusCode = 404;
+      return null;
+    }
+    if (item && !item.runtime) {
+      res.statusCode = 500;
+      return null;
+    }
+    const routePath = path.join(this.outdir, `${item.runtime}`);
 
-  routeLoader = async (route: string) => {
-    const mod = await import(route);
+    const assets = this.clientManifest[route];
+
+    const mod = await import(routePath);
+
     return {
       Component: mod.default,
       Meta: mod?.Meta || (() => null),
-      getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} }))
+      getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} })),
+      assets: {
+        js: assets?.js || [],
+        css: item?.css || []
+      }
     };
-  };
-
-  getDocument = async () => {
-    const doc = this.serverManifest['/_document']?.runtime;
-    if (doc) {
-      const docpath = path.join(this.outdir, `${doc}`);
-      const mod = await import(docpath);
-      return mod.default || this.document;
-    }
-    return this.document;
   };
 
   getScripts = (scripts: string[]) => {
@@ -97,35 +102,35 @@ class OctopusServer {
   };
 
   render = async (req: Request, res: Response, route: string) => {
-    const item = this.serverManifest[route];
-    if (!item || (item && !item.runtime)) {
-      res.sendStatus(404);
-      return;
+    let routeResult = await this.routeLoader(req, res, route);
+    const errorMessage: { statusCode: number; message: string } = {
+      statusCode: 200,
+      message: ''
+    };
+    if (!routeResult) {
+      routeResult = this.errorPage;
+      errorMessage.statusCode = res.statusCode;
+      errorMessage.message = res.statusCode === 404 ? 'Page Not Found' : 'Internal Server Error';
     }
 
-    const routePath = path.join(this.outdir, `${item.runtime}`);
+    const Document = this.document.Component;
+    const Component = routeResult.Component;
+    const Meta = routeResult.Meta;
 
-    const { Component, Meta, getServerSideProps } = await this.routeLoader(routePath);
-
-    const assets = this.clientManifest[route];
-
-    if (!Component) {
-      res.status(404).send('unknown page');
-      return;
-    }
-
-    const pageProps = await getServerSideProps({ req, res });
-
-    const Document = await this.getDocument();
+    const serverSideProps = await routeResult?.getServerSideProps({ req, res });
+    const pageProps = { ...serverSideProps.props, ...errorMessage };
 
     res.send(
       renderToString(
         <Document
-          main={() => <Component {...pageProps.props} />}
-          scripts={() => this.getScripts(assets?.js || [])}
-          meta={() => <Meta {...pageProps.props} />}
-          styles={() => this.getStyles(item?.css || [])}
-          pageProps={pageProps}
+          main={() => <Component {...pageProps} />}
+          scripts={() => this.getScripts(routeResult?.assets.js)}
+          meta={() => <Meta {...pageProps} />}
+          styles={() => this.getStyles(routeResult?.assets.css)}
+          pageProps={{
+            ...serverSideProps,
+            runtimeConfig: this.octopusConfig.publicRuntimeConfig
+          }}
         />
       )
     );
@@ -149,6 +154,8 @@ class OctopusServer {
     this.assetPrefix = config.assetPrefix;
     this.serverManifest = await this.manifestLoader('pages-manifest.json');
     this.clientManifest = await this.manifestLoader('static-manifest.json');
+    this.document = (await this.routeLoader({} as any, {} as any, '/_document')) as any;
+    this.errorPage = (await this.routeLoader({} as any, {} as any, '/_error')) as any;
     return Promise.resolve();
   };
 
