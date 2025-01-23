@@ -1,11 +1,11 @@
 import webpack, { Stats } from 'webpack';
 import { workerData, parentPort } from 'worker_threads';
-
-const { configPath, mode } = workerData as { configPath: string; mode: 'development' | 'production' };
+import createConfig from './config';
+const { isServer, mode } = workerData as { isServer: boolean; mode: 'development' | 'production' };
 
 process.env.NODE_ENV = mode || 'production';
 
-const config = require(configPath);
+const config = createConfig({ isServer, mode });
 const compiler = webpack(config);
 
 if (mode === 'development') {

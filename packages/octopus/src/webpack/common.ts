@@ -151,13 +151,6 @@ export const getJavascriptLoaders = () => {
   };
 };
 
-export const getMiniCssExtractPlugin = (client = false) => {
-  return new MiniCssExtractPlugin({
-    filename: client ? 'static/client/[name]/[name].css' : 'static/css/[name]/[name].css',
-    chunkFilename: client ? 'static/chunk/[chunkhash].css' : 'static/css/[name]/[name].css'
-  });
-};
-
 export const extensions = ['.tsx', '.ts', '.js', '.css'];
 
 export const getAppAliases = () => {

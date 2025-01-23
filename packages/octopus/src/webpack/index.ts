@@ -1,13 +1,13 @@
 import { Worker } from 'worker_threads';
 import * as path from 'path';
 
-const configPaths = ['./client.config.js', './server.config.js'];
+const configs = [{ isServer: false }, { isServer: true }];
 
 function webpackWorker(mode: 'development' | 'production') {
-  const promises = configPaths.map((configPath) => {
+  const promises = configs.map((config) => {
     return new Promise((resolve, reject) => {
       const worker = new Worker(path.resolve(__dirname, 'worker.js'), {
-        workerData: { configPath, mode }
+        workerData: { isServer: config.isServer, mode }
       });
 
       // Worker olaylarını dinle
