@@ -1,4 +1,4 @@
-import { DocumentProps } from 'octopus/page';
+import { DocumentProps } from 'octopus/types';
 
 export default function Document(props: DocumentProps) {
   const { main: Main, styles: Styles, meta: Meta, scripts: Scripts } = props;

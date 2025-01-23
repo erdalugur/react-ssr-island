@@ -3,8 +3,8 @@ export interface OctopusConfig {
   serverRuntimeConfig?: Record<string, any>;
   pagesdir?: string;
   outdir?: string;
-  clientEntries?: string[];
-  serverEntries?: string[];
+  clientEntries?: Record<string, string>;
+  serverEntries?: Record<string, string>;
   assetPrefix?: string;
   webpack?: (config: any, options: { isServer: boolean; buildId: string }) => OctopusConfig;
   inlineCss?: boolean;

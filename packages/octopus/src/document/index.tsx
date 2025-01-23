@@ -1,5 +1,6 @@
 import React from 'react';
-import { DocumentProps } from '../compiled/page';
+import { DocumentProps } from '../types';
+
 export default function Document(props: DocumentProps) {
   const { main: Main, styles: Styles, meta: Meta, scripts: Scripts } = props;
   return (

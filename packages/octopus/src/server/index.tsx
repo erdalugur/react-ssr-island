@@ -4,9 +4,9 @@ import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
 import fs from 'fs';
-import { Context, DocumentProps } from '../page';
+import { Context, DocumentProps } from '../types';
 
-interface RouteLoaderProps {
+interface RouteProps {
   Component: (props: DocumentProps) => JSX.Element;
   Meta: () => JSX.Element;
   getServerSideProps: (ctx: Context) => any;
@@ -22,8 +22,8 @@ class OctopusServer {
   styles: Record<string, string> = {};
   outdir!: string;
   assetPrefix!: string;
-  document!: RouteLoaderProps;
-  errorPage!: RouteLoaderProps;
+  document!: RouteProps;
+  errorPage!: RouteProps;
 
   constructor({ dev }: { dev: boolean }) {
     this.dev = dev;
@@ -39,7 +39,7 @@ class OctopusServer {
     req: Request,
     res: Response,
     route: string
-  ): Promise<RouteLoaderProps | null> => {
+  ): Promise<RouteProps | null> => {
     const item = this.serverManifest[route];
     if (!item) {
       res.statusCode = 404;
@@ -103,10 +103,7 @@ class OctopusServer {
 
   render = async (req: Request, res: Response, route: string) => {
     let routeResult = await this.routeLoader(req, res, route);
-    const errorMessage: { statusCode: number; message: string } = {
-      statusCode: 200,
-      message: ''
-    };
+    const errorMessage: any = {};
     if (!routeResult) {
       routeResult = this.errorPage;
       errorMessage.statusCode = res.statusCode;
@@ -142,20 +139,20 @@ class OctopusServer {
 
   prepare = async () => {
     if (this.dev) {
-      const { watch } = require('../../webpack');
+      const { watch } = await import('../webpack');
       await watch();
     }
-    const { getOctopusConfig } = require('../../webpack/utils');
+    const { getOctopusConfig } = await import('../webpack/utils');
     const config = getOctopusConfig();
     this.octopusConfig = config;
     this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
 
     this.outdir = config.outdir as string;
-    this.assetPrefix = config.assetPrefix;
+    this.assetPrefix = config.assetPrefix as string;
     this.serverManifest = await this.manifestLoader('pages-manifest.json');
     this.clientManifest = await this.manifestLoader('static-manifest.json');
-    this.document = (await this.routeLoader({} as any, {} as any, '/_document')) as any;
-    this.errorPage = (await this.routeLoader({} as any, {} as any, '/_error')) as any;
+    this.document = (await this.routeLoader({} as any, {} as any, '/_document')) as RouteProps;
+    this.errorPage = (await this.routeLoader({} as any, {} as any, '/_error')) as RouteProps;
     return Promise.resolve();
   };
 

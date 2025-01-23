@@ -1,0 +1,1 @@
+module.exports = require('../compiled/document/_error').default;

@@ -1,17 +1,20 @@
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const path = require('path');
-const fs = require('fs');
-const { getOctopusConfig } = require('../utils');
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import path from 'path';
+import fs from 'fs';
+import { getOctopusConfig } from './utils';
 
-const octopusConfig = getOctopusConfig();
-const pagesdir = octopusConfig.pagesdir;
-const outdir = octopusConfig.outdir;
+export const octopusConfig = getOctopusConfig();
+export const pagesdir = octopusConfig.pagesdir as string;
+export const outdir = octopusConfig.outdir as string;
 
-const octopusDir = path.join(__dirname, '../..');
+const octopusDir = path.resolve(__dirname, '..');
 
-const entryLoader = (platform = 'server') => {
-  const entries = {};
-  const loadEntries = (currentDir) => {
+type Platform = 'server' | 'client';
+
+export const entryLoader = (platform: Platform = 'server') => {
+  const entries: Record<string, string> = {};
+
+  const loadEntries = (currentDir: string) => {
     const files = fs.readdirSync(currentDir, { withFileTypes: true });
 
     for (const file of files) {
@@ -21,25 +24,27 @@ const entryLoader = (platform = 'server') => {
         loadEntries(fullPath);
       } else if (file.isFile() && file.name === `index.${platform}.tsx`) {
         const relativePath = path.relative(pagesdir, fullPath);
-        const entryKey = relativePath.replace(/\\/g, '/').replace(`/index.${platform}.tsx`, ''); // Cross-platform için normalize edilmiş key
+        const entryKey = relativePath.replace(/\\/g, '/').replace(`/index.${platform}.tsx`, '');
         entries[entryKey] = fullPath;
       }
     }
   };
+
   try {
     loadEntries(pagesdir);
-    entries['_error'] = entries['_error'] || path.join(octopusDir, 'document/_error.tsx');
+    entries['_error'] = entries['_error'] || path.join(octopusDir, 'document/_error.js');
     return entries;
   } catch (error) {
-    console.error('Hata oluştu:', error);
+    console.error('Error occurred:', error);
     throw error;
   }
 };
 
-const extraLoader = () => {
+export const extraLoader = () => {
   const keys = ['_document.tsx'];
-  const entries = {};
+  const entries: Record<string, string> = {};
   const files = fs.readdirSync(pagesdir, { withFileTypes: true });
+
   for (const file of files) {
     const fullPath = path.join(pagesdir, file.name);
 
@@ -49,14 +54,15 @@ const extraLoader = () => {
       entries[entryKey] = fullPath;
     }
   }
+
   return {
-    _document: entries['_document'] || path.join(octopusDir, 'document/index.tsx')
+    _document: entries['_document'] || path.join(octopusDir, 'document/index.js')
   };
 };
 
-const styleLoader = MiniCssExtractPlugin.loader;
+export const styleLoader = MiniCssExtractPlugin.loader;
 
-const postcssLoader = {
+export const postcssLoader = {
   loader: 'postcss-loader',
   options: {
     postcssOptions: {
@@ -72,7 +78,7 @@ const postcssLoader = {
   }
 };
 
-const cssLoader = {
+export const cssLoader = {
   loader: 'css-loader',
   options: {
     modules: {
@@ -84,17 +90,17 @@ const cssLoader = {
   }
 };
 
-const sassLoader = {
+export const sassLoader = {
   loader: 'sass-loader',
   options: {
     implementation: require('sass'),
-    //api: 'legacy',
     warnRuleAsWarning: false,
     sassOptions: {
       //outputStyle: "expanded",
     }
   }
 };
+
 const styleLoaders = [
   {
     test: /\.module\.css$/,
@@ -115,11 +121,12 @@ const styleLoaders = [
     use: [styleLoader, cssLoader, postcssLoader, sassLoader]
   }
 ];
-const getStyleLoaders = () => {
+
+export const getStyleLoaders = () => {
   return styleLoaders;
 };
 
-const getJavascriptLoaders = () => {
+export const getJavascriptLoaders = () => {
   return {
     test: /\.(js|ts|tsx)$/,
     exclude: /node_modules/,
@@ -144,33 +151,20 @@ const getJavascriptLoaders = () => {
   };
 };
 
-const getMiniCssExtractPlugin = (client = false) => {
+export const getMiniCssExtractPlugin = (client = false) => {
   return new MiniCssExtractPlugin({
     filename: client ? 'static/client/[name]/[name].css' : 'static/css/[name]/[name].css',
     chunkFilename: client ? 'static/chunk/[chunkhash].css' : 'static/css/[name]/[name].css'
   });
 };
 
-const extensions = ['.tsx', '.ts', '.js', '.css'];
+export const extensions = ['.tsx', '.ts', '.js', '.css'];
 
-const getAppAliases = () => {
+export const getAppAliases = () => {
   return {
     react: 'preact/compat',
     'react-dom/test-utils': 'preact/test-utils',
     'react-dom': 'preact/compat',
     'react/jsx-runtime': 'preact/jsx-runtime'
   };
-};
-
-module.exports = {
-  entryLoader,
-  getJavascriptLoaders,
-  getStyleLoaders,
-  getMiniCssExtractPlugin,
-  extensions,
-  pagesdir,
-  outdir,
-  octopusConfig,
-  getAppAliases,
-  extraLoader
 };

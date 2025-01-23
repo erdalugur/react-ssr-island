@@ -1,7 +1,7 @@
-const path = require('path');
-const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
-
-const {
+import path from 'path';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
+import webpackNodeExternals from 'webpack-node-externals';
+import {
   entryLoader,
   getJavascriptLoaders,
   getMiniCssExtractPlugin,
@@ -11,7 +11,7 @@ const {
   octopusConfig,
   getAppAliases,
   extraLoader
-} = require('./common.cjs');
+} from './common';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -20,8 +20,8 @@ const entries = octopusConfig.serverEntries || {
   ...extraLoader()
 };
 
-/** @type { import('webpack').Configuration } */
-const config = {
+/** Webpack Configuration */
+const config: import('webpack').Configuration = {
   name: 'server',
   mode: isDevelopment ? 'development' : 'production',
   target: 'node',
@@ -55,9 +55,8 @@ const config = {
       fileName: 'pages-manifest.json',
       publicPath: '/',
       generate: (seed, files) => {
-        const current = {};
-        for (let index = 0; index < files.length; index++) {
-          const item = files[index];
+        const current: Record<string, any> = {};
+        for (const item of files) {
           const ext = path.extname(item.name);
           const entry = item.name.replace(ext, '');
           const route = `/${entry}`;
@@ -80,7 +79,9 @@ const config = {
       }
     })
   ],
-  externals: [require('webpack-node-externals')(), { react: 'react', 'react-dom': 'react-dom' }]
+  externals: [webpackNodeExternals(), { react: 'react', 'react-dom': 'react-dom' }]
 };
-const fn = octopusConfig.webpack || ((c) => c);
-module.exports = fn(config, { isServer: true });
+
+const fn = octopusConfig.webpack || ((c: import('webpack').Configuration) => c);
+
+module.exports = fn(config, { isServer: true, buildId: '' });

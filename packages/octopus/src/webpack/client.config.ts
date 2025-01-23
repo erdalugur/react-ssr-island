@@ -1,7 +1,7 @@
-const TerserPlugin = require('terser-webpack-plugin');
-const path = require('path');
-const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
-const {
+import TerserPlugin from 'terser-webpack-plugin';
+import path from 'path';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
+import {
   entryLoader,
   extensions,
   getJavascriptLoaders,
@@ -10,7 +10,7 @@ const {
   outdir,
   octopusConfig,
   getAppAliases
-} = require('./common.cjs');
+} from './common';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -61,7 +61,7 @@ const config = {
       fileName: 'static-manifest.json',
       publicPath: '/',
       generate: (seed, files, entrypoints) => {
-        const manifest = {};
+        const manifest: any = {};
         for (let index = 0; index < files.length; index++) {
           const item = files[index];
           const ext = path.extname(item.name);
@@ -85,4 +85,4 @@ const config = {
   ]
 };
 const fn = octopusConfig.webpack || ((c) => c);
-module.exports = fn(config, { isServer: false });
+module.exports = fn(config, { isServer: false, buildId: '' });

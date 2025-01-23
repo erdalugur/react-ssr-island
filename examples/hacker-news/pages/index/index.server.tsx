@@ -1,4 +1,4 @@
-import { Context } from 'octopus/page';
+import { Context } from 'octopus/types';
 import '../../src/styles/reset.scss';
 import Header from '../../src/components/Header';
 import fetchData from '../../src/lib/fetch-data';
