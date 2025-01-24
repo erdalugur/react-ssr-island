@@ -19,7 +19,7 @@ octopus.prepare().then(() => {
   });
 
   app.get('*', (req, res, next) => {
-    const { pathname } = parse(req.originalUrl, true)
+    const { pathname } = parse(req.originalUrl, true);
     const route = pathname === '/' ? '/index' : pathname;
     octopus.render(req, res, route);
   });

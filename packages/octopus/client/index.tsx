@@ -2,24 +2,24 @@ import React, { Suspense } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { hydrationTypes } from '../hoc/types';
 
-function whenVisible(element: Element, hydrateCallback: () => void) {
+export function whenVisible(element: Element, hydrateCallback: () => void) {
   const observer = new IntersectionObserver(([entry]) => {
     if (entry.isIntersecting) {
       hydrateCallback();
-      observer.unobserve(element)
+      observer.unobserve(element);
     }
   });
   observer.observe(element);
 }
 
-const lazyHydrate = (container: Element, Component: any, props: any) => {
+export function render(container: Element, Component: any, props: any) {
   return hydrateRoot(
     container,
     <Suspense fallback={<div />}>
       <Component {...props} />
     </Suspense>
   );
-};
+}
 
 export default async function hydrate(
   componentMap: any,
@@ -44,11 +44,11 @@ export default async function hydrate(
       }
 
       if (hydrationType === hydrationTypes.domcontentloaded) {
-        lazyHydrate(container, Component, props);
+        render(container, Component, props);
         continue;
       }
       whenVisible(container, () => {
-        lazyHydrate(container, Component, props);
+        render(container, Component, props);
       });
     }
     return resolve();

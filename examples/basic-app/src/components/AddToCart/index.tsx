@@ -4,7 +4,7 @@ import { cart } from '../../lib';
 export interface AddToCartProps {
   id: number;
   price: number;
-  title: string
+  title: string;
 }
 function AddToCart(props: AddToCartProps) {
   const addToCardEvent = () => {
