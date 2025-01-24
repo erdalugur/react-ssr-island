@@ -1,13 +1,20 @@
 import { Worker } from 'worker_threads';
 import * as path from 'path';
+import cyrpto from 'crypto';
 
 const configs = [{ isServer: false }, { isServer: true }];
+
+const buildId = cyrpto.randomBytes(10).toString('hex')
 
 function webpackWorker(mode: 'development' | 'production') {
   const promises = configs.map((config) => {
     return new Promise((resolve, reject) => {
       const worker = new Worker(path.resolve(__dirname, 'worker.js'), {
-        workerData: { isServer: config.isServer, mode }
+        workerData: {
+          isServer: config.isServer,
+          mode,
+          buildId
+        }
       });
 
       // Worker olaylarını dinle

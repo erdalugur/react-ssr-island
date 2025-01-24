@@ -1,3 +1,4 @@
+import { Configuration } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 import path from 'path';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
@@ -70,20 +71,20 @@ function createManifest(entries: any, isServer: boolean) {
 
 function getMiniCssExtractPlugin(client = false) {
   return new MiniCssExtractPlugin({
-    filename: client ? 'static/client/[name]/[name].css' : 'static/css/[name]/[name].css',
+    filename: client
+      ? 'static/client/[name]/[name].[chunkhash].css'
+      : 'static/css/[name]/[name].[chunkhash].css',
     chunkFilename: client ? 'static/chunk/[chunkhash].css' : 'static/css/[name]/[name].css'
   });
 }
 
-interface ConfigOptions {
+export interface ConfigOptions {
   isServer: boolean;
   mode: 'production' | 'development';
+  buildId: string;
 }
 
-export default function createConfig({
-  isServer,
-  mode
-}: ConfigOptions): import('webpack').Configuration {
+export default function createConfig({ isServer, mode, buildId }: ConfigOptions): Configuration {
   const isDevelopment = mode !== 'production';
 
   const entries = isServer
@@ -105,7 +106,7 @@ export default function createConfig({
     filename: 'pages/[name].cjs',
     libraryTarget: 'commonjs2'
   };
-  return {
+  const config: Configuration = {
     name: isServer ? 'server' : 'client',
     mode: mode,
     target: isServer ? 'node' : 'browserslist',
@@ -152,4 +153,8 @@ export default function createConfig({
       ? [require('webpack-node-externals')(), { react: 'react', 'react-dom': 'react-dom' }]
       : []
   };
+
+  const fn =
+    octopusConfig.webpack || ((c: Configuration, {}: { isServer: boolean; buildId: string }) => c);
+  return fn(config, { isServer, buildId });
 }

@@ -1,3 +1,5 @@
+import { Configuration } from "webpack";
+
 export interface OctopusConfig {
   publicRuntimeConfig?: Record<string, any>;
   serverRuntimeConfig?: Record<string, any>;
@@ -6,7 +8,7 @@ export interface OctopusConfig {
   clientEntries?: Record<string, string>;
   serverEntries?: Record<string, string>;
   assetPrefix?: string;
-  webpack?: (config: any, options: { isServer: boolean; buildId: string }) => OctopusConfig;
+  webpack?: (config: any, options: { isServer: boolean; buildId: string }) => Configuration
   inlineCss?: boolean;
 }
 export function defineConfig(config: OctopusConfig) {
