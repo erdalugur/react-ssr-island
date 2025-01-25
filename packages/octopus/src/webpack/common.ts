@@ -1,7 +1,7 @@
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import path from 'path';
 import fs from 'fs';
-import { getOctopusConfig } from './utils';
+import { getOctopusConfig } from '../config';
 
 export const octopusConfig = getOctopusConfig();
 export const pagesdir = octopusConfig.pagesdir as string;

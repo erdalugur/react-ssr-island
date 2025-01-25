@@ -1,6 +1,6 @@
 import webpack, { Stats } from 'webpack';
 import { workerData, parentPort } from 'worker_threads';
-import createConfig, { ConfigOptions } from './config';
+import createConfig, { ConfigOptions } from '../webpack/config';
 const { isServer, mode, buildId } = workerData as ConfigOptions;
 
 process.env.NODE_ENV = mode || 'production';

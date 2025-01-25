@@ -13,7 +13,6 @@ interface RouteProps {
   assets: { js: string[]; css: string[] };
 }
 
-const styles: Record<string, string> = {};
 class OctopusServer {
   octopusConfig!: OctopusConfig;
   dev: boolean = process.env.NODE_ENV !== 'production';
@@ -24,7 +23,7 @@ class OctopusServer {
   assetPrefix!: string;
   document!: RouteProps;
   errorPage!: RouteProps;
-
+  routePaths: Record<string, string> = {};
   constructor({ dev }: { dev: boolean }) {
     this.dev = dev;
   }
@@ -33,6 +32,15 @@ class OctopusServer {
     Object.keys(config).forEach((key) => {
       process.env[key] = config[key];
     });
+  };
+
+  getRoutePath = (route: string) => {
+    if (this.routePaths[route]) {
+      return this.routePaths[route];
+    }
+    const routePath = path.join(this.outdir, route);
+    this.routePaths[route] = routePath;
+    return routePath;
   };
 
   routeLoader = async (req: Request, res: Response, route: string): Promise<RouteProps | null> => {
@@ -45,7 +53,8 @@ class OctopusServer {
       res.statusCode = 500;
       return null;
     }
-    const routePath = path.join(this.outdir, `${item.runtime}`);
+    
+    const routePath = this.getRoutePath(item.runtime);
 
     const assets = this.clientManifest[route];
 
@@ -88,12 +97,12 @@ class OctopusServer {
       return css.map((s: string) => <link key={s} rel="stylesheet" href={`${assetPrefix}${s}`} />);
 
     return css.map((s) => {
-      if (!styles[s]) {
+      if (!this.styles[s]) {
         const p = path.join(outdir as string, `${s}`);
         const style = fs.readFileSync(p, { encoding: 'utf-8' });
-        styles[s] = style;
+        this.styles[s] = style;
       }
-      return <style dangerouslySetInnerHTML={{ __html: styles[s] }} />;
+      return <style dangerouslySetInnerHTML={{ __html: this.styles[s] }} />;
     });
   };
 
@@ -134,10 +143,10 @@ class OctopusServer {
 
   prepare = async () => {
     if (this.dev) {
-      const { watch } = await import('../webpack');
-      await watch();
+      const cli = (await import('../cli')).default;
+      await cli.dev();
     }
-    const { getOctopusConfig } = await import('../webpack/utils');
+    const { getOctopusConfig } = await import('../config');
     const config = getOctopusConfig();
     this.octopusConfig = config;
     this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
