@@ -7,8 +7,8 @@ import fs from 'fs';
 import { Context, DocumentProps } from '../types';
 
 interface RouteProps {
-  Component: (props: DocumentProps) => JSX.Element;
-  Meta: () => JSX.Element;
+  Component: <T>(props: T) => JSX.Element;
+  Meta: <T>(props: T) => JSX.Element;
   getServerSideProps: (ctx: Context) => any;
   assets: { js: string[]; css: string[] };
 }
@@ -35,11 +35,7 @@ class OctopusServer {
     });
   };
 
-  routeLoader = async (
-    req: Request,
-    res: Response,
-    route: string
-  ): Promise<RouteProps | null> => {
+  routeLoader = async (req: Request, res: Response, route: string): Promise<RouteProps | null> => {
     const item = this.serverManifest[route];
     if (!item) {
       res.statusCode = 404;
@@ -110,22 +106,21 @@ class OctopusServer {
       errorMessage.message = res.statusCode === 404 ? 'Page Not Found' : 'Internal Server Error';
     }
 
-    const Document = this.document.Component;
-    const Component = routeResult.Component;
-    const Meta = routeResult.Meta;
+    const Document = this.document.Component<DocumentProps>;
+    const { Component, Meta, assets, getServerSideProps } = routeResult;
 
-    const serverSideProps = await routeResult?.getServerSideProps({ req, res });
+    const serverSideProps = await getServerSideProps({ req, res });
     const pageProps = { ...serverSideProps.props, ...errorMessage };
 
     res.send(
       renderToString(
         <Document
           main={() => <Component {...pageProps} />}
-          scripts={() => this.getScripts(routeResult?.assets.js)}
+          scripts={() => this.getScripts(assets.js)}
           meta={() => <Meta {...pageProps} />}
-          styles={() => this.getStyles(routeResult?.assets.css)}
+          styles={() => this.getStyles(assets.css)}
           pageProps={{
-            ...serverSideProps,
+            ...pageProps,
             runtimeConfig: this.octopusConfig.publicRuntimeConfig
           }}
         />
