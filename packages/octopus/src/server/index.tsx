@@ -1,23 +1,22 @@
 import { renderToString } from 'react-dom/server';
-import React, { JSX } from 'react';
+import React from 'react';
 import { Request, Response } from 'express';
 import path from 'path';
 import { OctopusConfig } from '../config';
 import fs from 'fs';
-import { Context, DocumentProps } from '../types';
-
-interface RouteProps {
-  Component: <T>(props: T) => JSX.Element;
-  Meta: <T>(props: T) => JSX.Element;
-  getServerSideProps: (ctx: Context) => any;
-  assets: { js: string[]; css: string[] };
-}
+import {
+  ServerPagesManifest,
+  ClientPagesManifest,
+  RenderPage,
+  RouteProps,
+  DocumentProps
+} from '../types';
 
 class OctopusServer {
   octopusConfig!: OctopusConfig;
   dev: boolean = process.env.NODE_ENV !== 'production';
-  serverManifest: any;
-  clientManifest: any;
+  serverManifest!: ServerPagesManifest;
+  clientManifest!: ClientPagesManifest;
   styles: Record<string, string> = {};
   outdir!: string;
   assetPrefix!: string;
@@ -43,17 +42,12 @@ class OctopusServer {
     return routePath;
   };
 
-  routeLoader = async (req: Request, res: Response, route: string): Promise<RouteProps | null> => {
+  routeLoader = async (route: string): Promise<RouteProps | null> => {
     const item = this.serverManifest[route];
     if (!item) {
-      res.statusCode = 404;
       return null;
     }
-    if (item && !item.runtime) {
-      res.statusCode = 500;
-      return null;
-    }
-    
+
     const routePath = this.getRoutePath(item.runtime);
 
     const assets = this.clientManifest[route];
@@ -106,13 +100,14 @@ class OctopusServer {
     });
   };
 
-  render = async (req: Request, res: Response, route: string) => {
-    let routeResult = await this.routeLoader(req, res, route);
+  renderPage = async ({ req, res, route }: RenderPage) => {
+    let routeResult = await this.routeLoader(route);
     const errorMessage: any = {};
     if (!routeResult) {
       routeResult = this.errorPage;
-      errorMessage.statusCode = res.statusCode;
-      errorMessage.message = res.statusCode === 404 ? 'Page Not Found' : 'Internal Server Error';
+      res.statusCode = 404;
+      errorMessage.statusCode = 404;
+      errorMessage.message = 'Page Not Found';
     }
 
     const Document = this.document.Component<DocumentProps>;
@@ -121,23 +116,26 @@ class OctopusServer {
     const serverSideProps = await getServerSideProps({ req, res });
     const pageProps = { ...serverSideProps.props, ...errorMessage };
 
-    res.send(
-      renderToString(
-        <Document
-          main={() => <Component {...pageProps} />}
-          scripts={() => this.getScripts(assets.js)}
-          meta={() => <Meta {...pageProps} />}
-          styles={() => this.getStyles(assets.css)}
-          pageProps={{
-            ...pageProps,
-            runtimeConfig: this.octopusConfig.publicRuntimeConfig
-          }}
-        />
-      )
+    return renderToString(
+      <Document
+        main={() => <Component {...pageProps} />}
+        scripts={() => this.getScripts(assets.js)}
+        meta={() => <Meta {...pageProps} />}
+        styles={() => this.getStyles(assets.css)}
+        pageProps={{
+          ...pageProps,
+          runtimeConfig: this.octopusConfig.publicRuntimeConfig
+        }}
+      />
     );
   };
 
-  manifestLoader = async (m: string) => {
+  render = async (req: Request, res: Response, route: string) => {
+    const html = await this.renderPage({ req, res, route });
+    res.send(html);
+  };
+
+  manifestLoader = async <T,>(m: string): Promise<T> => {
     return import(path.join(this.outdir, m));
   };
 
@@ -153,10 +151,10 @@ class OctopusServer {
 
     this.outdir = config.outdir as string;
     this.assetPrefix = config.assetPrefix as string;
-    this.serverManifest = await this.manifestLoader('pages-manifest.json');
-    this.clientManifest = await this.manifestLoader('static-manifest.json');
-    this.document = (await this.routeLoader({} as any, {} as any, '/_document')) as RouteProps;
-    this.errorPage = (await this.routeLoader({} as any, {} as any, '/_error')) as RouteProps;
+    this.serverManifest = await this.manifestLoader<ServerPagesManifest>('pages-manifest.json');
+    this.clientManifest = await this.manifestLoader<ClientPagesManifest>('static-manifest.json');
+    this.document = (await this.routeLoader('/_document')) as RouteProps;
+    this.errorPage = (await this.routeLoader('/_error')) as RouteProps;
     return Promise.resolve();
   };
 
