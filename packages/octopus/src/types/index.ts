@@ -17,25 +17,26 @@ export interface DocumentProps {
 export interface RouteProps {
   Component: <T>(props: T) => JSX.Element;
   Meta: <T>(props: T) => JSX.Element;
-  getServerSideProps: (ctx: Context) => any;
-  assets: { js: string[]; css: string[] };
+  dataLoader: (params: any) => Promise<any>;
+  js: string[];
+  css: string[];
+  params: any;
 }
 
-export interface ServerPagesManifest {
-  [route: string]: {
-    runtime: string
-    css: string[]
-  }
+export interface ManifestItem {
+  runtime: string;
+  css: string[];
+  js: string[];
+  params: any;
+  ssg: boolean;
+  destination: string;
 }
-
-export interface ClientPagesManifest {
-  [route: string]: {
-    js: string[]
-  }
+export interface AppManifest {
+  [route: string]: ManifestItem;
 }
 
 export interface RenderPage {
   req: Request;
   res: Response;
-  route: string;
+  route: ManifestItem;
 }

@@ -2,27 +2,24 @@ import { renderToString } from 'react-dom/server';
 import React from 'react';
 import { Request, Response } from 'express';
 import path from 'path';
-import { OctopusConfig } from '../config';
 import fs from 'fs';
-import {
-  ServerPagesManifest,
-  ClientPagesManifest,
-  RenderPage,
-  RouteProps,
-  DocumentProps
-} from '../types';
+import { AppManifest, RenderPage, RouteProps, DocumentProps, ManifestItem } from '../types';
+import { ensureDirectoryExists, writeFile } from '../utils';
+import { getOctopusConfig, OctopusConfig } from '../config';
+import Manifest from './manifest';
+import { StaticPagesCantUseGetServerSideProps } from './errors';
 
 class OctopusServer {
   octopusConfig!: OctopusConfig;
   dev: boolean = process.env.NODE_ENV !== 'production';
-  serverManifest!: ServerPagesManifest;
-  clientManifest!: ClientPagesManifest;
+  appManifest!: AppManifest;
   styles: Record<string, string> = {};
   outdir!: string;
   assetPrefix!: string;
   document!: RouteProps;
   errorPage!: RouteProps;
   routePaths: Record<string, string> = {};
+  manifest!: Manifest;
   constructor({ dev }: { dev: boolean }) {
     this.dev = dev;
   }
@@ -42,26 +39,23 @@ class OctopusServer {
     return routePath;
   };
 
-  routeLoader = async (route: string): Promise<RouteProps | null> => {
-    const item = this.serverManifest[route];
-    if (!item) {
-      return null;
-    }
-
+  routeLoader = async (item: ManifestItem): Promise<RouteProps> => {
     const routePath = this.getRoutePath(item.runtime);
-
-    const assets = this.clientManifest[route];
-
     const mod = await import(routePath);
+
+    if (item.ssg && mod.getServerSideProps) {
+      throw new StaticPagesCantUseGetServerSideProps(item.runtime)
+    }
+    const dataLoader =
+      mod.getServerSideProps || mod.getStaticProps || mod.getIntialProps || (() => ({ props: {} }));
 
     return {
       Component: mod.default,
       Meta: mod?.Meta || (() => null),
-      getServerSideProps: mod?.getServerSideProps || (() => ({ props: {} })),
-      assets: {
-        js: assets?.js || [],
-        css: item?.css || []
-      }
+      dataLoader,
+      js: item?.js || [],
+      css: item?.css || [],
+      params: item.params
     };
   };
 
@@ -100,28 +94,18 @@ class OctopusServer {
     });
   };
 
-  renderPage = async ({ req, res, route }: RenderPage) => {
-    let routeResult = await this.routeLoader(route);
-    const errorMessage: any = {};
-    if (!routeResult) {
-      routeResult = this.errorPage;
-      res.statusCode = 404;
-      errorMessage.statusCode = 404;
-      errorMessage.message = 'Page Not Found';
-    }
-
+  renderToHTML = async ({ req, res, route }: RenderPage) => {
     const Document = this.document.Component<DocumentProps>;
-    const { Component, Meta, assets, getServerSideProps } = routeResult;
+    const { Component, Meta, dataLoader, css, js, params } = await this.routeLoader(route);
 
-    const serverSideProps = await getServerSideProps({ req, res });
-    const pageProps = { ...serverSideProps.props, ...errorMessage };
+    const pageProps = await dataLoader({ req, res, params });
 
     return renderToString(
       <Document
-        main={() => <Component {...pageProps} />}
-        scripts={() => this.getScripts(assets.js)}
-        meta={() => <Meta {...pageProps} />}
-        styles={() => this.getStyles(assets.css)}
+        main={() => <Component {...pageProps.props} />}
+        scripts={() => this.getScripts(js)}
+        meta={() => <Meta {...pageProps.props} />}
+        styles={() => this.getStyles(css)}
         pageProps={{
           ...pageProps,
           runtimeConfig: this.octopusConfig.publicRuntimeConfig
@@ -131,31 +115,53 @@ class OctopusServer {
   };
 
   render = async (req: Request, res: Response, route: string) => {
-    const html = await this.renderPage({ req, res, route });
+    let item = this.appManifest[route];
+    if (!item) {
+      item = this.appManifest['/_error'];
+      res.statusCode = 404;
+    }
+    if (item.runtime.endsWith('.html')) {
+      const routePath = this.getRoutePath(item.runtime);
+      res.sendFile(routePath);
+      return;
+    }
+    const html = await this.renderToHTML({ req, res, route: item });
     res.send(html);
-  };
-
-  manifestLoader = async <T,>(m: string): Promise<T> => {
-    return import(path.join(this.outdir, m));
   };
 
   prepare = async () => {
     if (this.dev) {
-      const cli = (await import('../cli')).default;
+      const { default: cli } = await import('../cli');
       await cli.dev();
     }
-    const { getOctopusConfig } = await import('../config');
     const config = getOctopusConfig();
-    this.octopusConfig = config;
-    this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
-
     this.outdir = config.outdir as string;
     this.assetPrefix = config.assetPrefix as string;
-    this.serverManifest = await this.manifestLoader<ServerPagesManifest>('pages-manifest.json');
-    this.clientManifest = await this.manifestLoader<ClientPagesManifest>('static-manifest.json');
-    this.document = (await this.routeLoader('/_document')) as RouteProps;
-    this.errorPage = (await this.routeLoader('/_error')) as RouteProps;
+    this.octopusConfig = config;
+    this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
+    this.manifest = new Manifest({ dev: this.dev, config });
+    this.appManifest = await this.manifest.generate();
+    this.document = await this.routeLoader(this.appManifest['/_document']);
+    if (!this.dev) {
+      this.export();
+    }
     return Promise.resolve();
+  };
+
+  export = async () => {
+    const appManifest = this.appManifest;
+    for (const key in appManifest) {
+      const item = appManifest[key];
+      if (item.destination) {
+        const target = path.join(this.outdir, 'out');
+        const html = await this.renderToHTML({ req: {} as any, res: {} as any, route: item });
+        item.runtime = `/out${item.destination}.html`;
+        const htmlPath = path.join(this.outdir, item.runtime);
+        await ensureDirectoryExists(target);
+        await writeFile(htmlPath, html);
+      }
+    }
+    this.appManifest = appManifest;
   };
 
   getRequestHandler = async (req: Request, res: Response) => {

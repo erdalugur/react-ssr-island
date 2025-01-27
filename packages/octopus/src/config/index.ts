@@ -1,6 +1,12 @@
 import { Configuration } from 'webpack';
 import path from 'path';
 
+export interface StaticSiteGeneration {
+  source: string;
+  destination: string;
+  params: any;
+}
+type StaticSiteGenerationFuction = () => Promise<StaticSiteGeneration[]>;
 export interface OctopusConfig {
   publicRuntimeConfig?: Record<string, any>;
   serverRuntimeConfig?: Record<string, any>;
@@ -11,7 +17,9 @@ export interface OctopusConfig {
   assetPrefix?: string;
   webpack?: (config: any, options: { isServer: boolean; buildId: string }) => Configuration;
   inlineCss?: boolean;
+  ssg?: StaticSiteGenerationFuction;
 }
+
 export function defineConfig(config: OctopusConfig) {
   return config;
 }

@@ -20,3 +20,13 @@ export default function Error({ statusCode, message }: ErrorProps) {
     </div>
   );
 }
+
+export const getServerSideProps = ({ res, err }: any) => {
+  const statusCode = res ? res.statusCode : err ? err.statusCode : 404;
+  return {
+    props: {
+      statusCode,
+      message: `An error ${statusCode} occurred on server`
+    }
+  };
+};
