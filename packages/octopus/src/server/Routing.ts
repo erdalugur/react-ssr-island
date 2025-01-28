@@ -11,9 +11,9 @@ export default class Routing {
     this.outdir = config.outdir as string;
   }
 
-  private manifestLoder = async <T>(m: string): Promise<T> => {
+  private manifestLoader = async <T>(m: string): Promise<T> => {
     const mod = await readFile(path.join(this.outdir, m));
-    return Promise.resolve(JSON.parse(mod));
+    return JSON.parse(mod);
   };
 
   getRoutePath = (route: string) => {
@@ -26,55 +26,57 @@ export default class Routing {
   };
 
   generateRoutesMap = async () => {
-    const pagesManifest = await this.manifestLoder<any>('pages-manifest.json');
-    const clientManifest = await this.manifestLoder<any>('static-manifest.json');
+    const pagesManifest = await this.manifestLoader<any>('pages-manifest.json');
+    const clientManifest = await this.manifestLoader<any>('static-manifest.json');
 
-    const promises = Object.keys(pagesManifest).map(async (key) => {
-      const item = { ...pagesManifest[key], js: clientManifest[key]?.js || [] };
-    
-      item.route = key;
-      const mod = await import(this.getRoutePath(item.runtime));
-      item.Page = mod.default;
-      item.Meta = mod.Meta || (() => null);
-    
-      if (mod.getStaticProps) {
-        item.ssg = true;
-        if (mod.getStaticPaths) {
-          const props = await mod.getStaticPaths();
-    
-          return (props.paths || []).map((p: any) => {
-            const prefix = p.route || key;
-            const route = [prefix, p.params?.slug].filter(Boolean).join('/');
+    const promises = Object.keys(pagesManifest)
+      .filter((key) => pagesManifest[key].runtime)
+      .map(async (key) => {
+        const item = { ...pagesManifest[key], js: clientManifest[key]?.js || [] };
+
+        item.route = key;
+        const mod = await import(this.getRoutePath(item.runtime));
+        item.Page = mod.default;
+        item.Meta = mod.Meta || (() => null);
+
+        if (mod.getStaticProps) {
+          item.ssg = true;
+          if (mod.getStaticPaths) {
+            const props = await mod.getStaticPaths();
+
+            return (props.paths || []).map((p: any) => {
+              const prefix = p.route || key;
+              const route = [prefix, p.params?.slug].filter(Boolean).join('/');
+              return {
+                [route]: {
+                  ...item,
+                  destination: prefix,
+                  params: p.params,
+                  route: route,
+                  loader: mod.getStaticProps
+                }
+              };
+            });
+          } else {
             return {
-              [route]: {
+              [key]: {
                 ...item,
-                destination: prefix,
-                params: p.params,
-                route: route,
+                destination: '',
+                params: {},
+                route: key,
                 loader: mod.getStaticProps
               }
             };
-          });
+          }
         } else {
           return {
             [key]: {
               ...item,
-              destination: '',
-              params: {},
-              route: key,
-              loader: mod.getStaticProps
+              loader: mod.getServerSideProps || (() => ({ props: {} }))
             }
           };
         }
-      } else {
-        return {
-          [key]: {
-            ...item,
-            loader: mod.getServerSideProps || (() => ({ props: {} }))
-          }
-        };
-      }
-    });
+      });
     const results = await Promise.all(promises);
     return results.flat().reduce((acc, result) => {
       return { ...acc, ...result };

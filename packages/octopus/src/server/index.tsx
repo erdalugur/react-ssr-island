@@ -38,32 +38,45 @@ class OctopusServer {
     res.send(html);
   };
 
+  initConfig = async () => {
+    const config = getOctopusConfig();
+    this.octopusConfig = config;
+    this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
+  };
+
+  initRoutes = async () => {
+    this.routing = new Rounting({ dev: this.dev, config: this.octopusConfig });
+    this.routes = await this.routing.generateRoutesMap();
+  };
+
+  initRenderer = async () => {
+    this.renderer = new Renderer({
+      config: this.octopusConfig,
+      routes: this.routes
+    });
+  };
+
+  generateStaticPages = async () => {
+    const ssg = new StaticSiteGenerator({
+      routes: this.routes,
+      outdir: this.octopusConfig.outdir as string,
+      renderToHTML: this.renderer.renderToHTML
+    });
+    await ssg.generate();
+  };
+
   prepare = async () => {
     if (this.dev) {
       const { default: cli } = await import('../cli');
       await cli.dev();
     }
-    const config = getOctopusConfig();
-    this.octopusConfig = config;
-    this.register({ ...config.publicRuntimeConfig, ...config.serverRuntimeConfig });
 
-    this.routing = new Rounting({ dev: this.dev, config });
-    this.routes = await this.routing.generateRoutesMap();
-
-    const renderer = new Renderer({
-      config: config,
-      routes: this.routes
-    });
-
-    this.renderer = renderer;
-
+    await this.initConfig();
+    await this.initRoutes();
+    await this.initRenderer();
+    
     if (!this.dev) {
-      const ssg = new StaticSiteGenerator({
-        routes: this.routes,
-        outdir: config.outdir as string,
-        renderToHTML: this.renderer.renderToHTML
-      });
-      await ssg.generate();
+      await this.generateStaticPages();
     }
     return Promise.resolve();
   };

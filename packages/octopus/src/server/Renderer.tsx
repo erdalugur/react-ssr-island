@@ -2,14 +2,13 @@ import { renderToString } from 'react-dom/server';
 import React from 'react';
 import path from 'path';
 import fs from 'fs';
-import { Routes, Route, RenderPage } from '../types';
+import { Routes, RenderPage } from '../types';
 import { OctopusConfig } from '../config';
 
 export default class Renderer {
   private routes: Routes;
   private styles: Record<string, string> = {};
   private octopusConfig: OctopusConfig;
-  private document!: Route;
   private assetPrefix: string;
 
   constructor({ routes, config }: { routes: Routes; config: OctopusConfig }) {
