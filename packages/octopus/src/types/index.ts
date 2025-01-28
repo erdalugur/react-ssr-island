@@ -14,29 +14,41 @@ export interface DocumentProps {
   pageProps: any;
 }
 
-export interface RouteProps {
-  Component: <T>(props: T) => JSX.Element;
-  Meta: <T>(props: T) => JSX.Element;
-  dataLoader: (params: any) => Promise<any>;
-  js: string[];
-  css: string[];
-  params: any;
-}
-
-export interface ManifestItem {
+export interface Route {
   runtime: string;
   css: string[];
   js: string[];
-  params: any;
   ssg: boolean;
+  mod: any;
   destination: string;
+  params: any;
+  revalidate?: number;
+  route: string;
+  loader: (args: any) => Promise<any>;
+  Meta: (props: any) => JSX.Element;
+  Page: (props: any) => JSX.Element;
 }
-export interface AppManifest {
-  [route: string]: ManifestItem;
+export interface Routes {
+  [route: string]: Route;
 }
 
 export interface RenderPage {
   req: Request;
   res: Response;
-  route: ManifestItem;
+  route: Route;
 }
+
+export type GetStaticPaths = () => Promise<{
+  paths: {
+    params: any;
+    route?: string;
+  }[];
+}>;
+
+export type GetStaticProps = ({ params }: any) => Promise<{
+  props: any;
+}>;
+
+export type GetServerSideProps = ({ req, res }: Context) => Promise<{
+  props: any;
+}>;

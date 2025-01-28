@@ -26,5 +26,5 @@ export async function readFile(filePath: string) {
 }
 
 export async function writeFile(filePath: string, data: string) {
-  return fs.writeFile(filePath, data)
+  return fs.writeFile(filePath, data);
 }
