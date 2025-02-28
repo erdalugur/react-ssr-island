@@ -4,6 +4,7 @@ import { getOctopusConfig, OctopusConfig } from '../config';
 import Rounting from './Routing';
 import StaticSiteGenerator from './StaticSiteGenerator';
 import Renderer from './Renderer';
+import path from 'path';
 
 class OctopusServer {
   octopusConfig!: OctopusConfig;
@@ -65,16 +66,39 @@ class OctopusServer {
     await ssg.generate();
   };
 
+  refresh = async (isServer: boolean, files: string[]) => {
+    console.log(`🔄 Refreshing ${isServer ? 'server' : 'client'} side bundle...`);
+    console.time('⏳ Refresh time');
+
+    if (isServer) {
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        const modulePath = path.join(this.octopusConfig.outdir as string, file);
+        delete require.cache[modulePath];
+      }
+    }
+
+    await this.initRoutes();
+    await this.initRenderer();
+    console.timeEnd('⏳ Refresh time');
+    console.log(`✅ ${isServer ? 'Server' : 'Client'} side bundle updated successfully!`);
+    return Promise.resolve();
+  };
+
   prepare = async () => {
     if (this.dev) {
       const { default: cli } = await import('../cli');
       await cli.dev();
+      const { default: watchpack } = await import('../webpack/watchpack');
+      watchpack.onBundleUpdated((isServer, files) => {
+        this.refresh(isServer, files);
+      });
     }
 
     await this.initConfig();
     await this.initRoutes();
     await this.initRenderer();
-    
+
     if (!this.dev) {
       await this.generateStaticPages();
     }

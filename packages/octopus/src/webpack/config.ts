@@ -81,10 +81,9 @@ function getMiniCssExtractPlugin(client = false) {
 export interface ConfigOptions {
   isServer: boolean;
   mode: 'production' | 'development';
-  buildId: string;
 }
 
-export default function createConfig({ isServer, mode, buildId }: ConfigOptions): Configuration {
+export default function createConfig({ isServer, mode }: ConfigOptions): Configuration {
   const isDevelopment = mode !== 'production';
 
   const entries = isServer
@@ -96,7 +95,7 @@ export default function createConfig({ isServer, mode, buildId }: ConfigOptions)
 
   const clientOutput = {
     path: outdir,
-    filename: 'static/js/[name]/main.[chunkhash].js',
+    filename: isDevelopment ? 'static/js/[name]/main.js' : 'static/js/[name]/main.[chunkhash].js',
     publicPath: octopusConfig.assetPrefix
       ? `${octopusConfig.assetPrefix}/`
       : `/${octopusConfig.outdirname}/`
@@ -154,7 +153,6 @@ export default function createConfig({ isServer, mode, buildId }: ConfigOptions)
       : []
   };
 
-  const fn =
-    octopusConfig.webpack || ((c: Configuration, {}: { isServer: boolean; buildId: string }) => c);
-  return fn(config, { isServer, buildId });
+  const fn = octopusConfig.webpack || ((c: Configuration, {}: { isServer: boolean }) => c);
+  return fn(config, { isServer });
 }

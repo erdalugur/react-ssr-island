@@ -1,11 +1,9 @@
 import { Worker } from 'worker_threads';
 import * as path from 'path';
-import cyrpto from 'crypto';
+import watchpack from '../webpack/watchpack';
 
 class CommandLineInterface {
-  buildId: string;
   constructor() {
-    this.buildId = cyrpto.randomBytes(10).toString('hex');
     this.asyncWorker = this.asyncWorker.bind(this);
     this.build = this.build.bind(this);
     this.dev = this.dev.bind(this);
@@ -17,14 +15,13 @@ class CommandLineInterface {
         const worker = new Worker(p, {
           workerData: {
             isServer: config.isServer,
-            mode,
-            buildId: this.buildId
+            mode
           }
         });
-        
-        worker.on('message', (v) => {
-          console.log(v);
-          resolve(v);
+
+        worker.on('message', (files) => {
+          watchpack.emitBundleUpdated(config.isServer, JSON.parse(files || '[]'));
+          resolve(files);
         });
 
         worker.on('error', (err) => {

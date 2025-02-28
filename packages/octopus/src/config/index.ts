@@ -9,7 +9,7 @@ export interface OctopusConfig {
   clientEntries?: Record<string, string>;
   serverEntries?: Record<string, string>;
   assetPrefix?: string;
-  webpack?: (config: any, options: { isServer: boolean; buildId: string }) => Configuration;
+  webpack?: (config: any, options: { isServer: boolean; }) => Configuration;
   inlineCss?: boolean;
 }
 

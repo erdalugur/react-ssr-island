@@ -3,5 +3,5 @@ module.exports = defineConfig({
   publicRuntimeConfig: {
     IMAGE_URL: 'https://www.w3schools.com'
   },
-  inlineCss: true
+  inlineCss: process.env.NODE_ENV === 'production'
 });
