@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "build": "octopus build",
-    "dev": "nodemon app.js",
+    "dev": "nodemon",
     "format": "prettier --write \"**/*.{js,ts,tsx,md}\"",
     "start": "NODE_ENV=production node app.js"
   },

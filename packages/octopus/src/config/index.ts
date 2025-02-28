@@ -1,4 +1,3 @@
-import { Configuration } from 'webpack';
 import path from 'path';
 
 export interface OctopusConfig {
@@ -9,7 +8,7 @@ export interface OctopusConfig {
   clientEntries?: Record<string, string>;
   serverEntries?: Record<string, string>;
   assetPrefix?: string;
-  webpack?: (config: any, options: { isServer: boolean; buildId: string }) => Configuration;
+  webpack?: (config: any, options: { isServer: boolean; buildId: string }) => any;
   inlineCss?: boolean;
 }
 

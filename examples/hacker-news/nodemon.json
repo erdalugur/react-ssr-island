@@ -1,0 +1,5 @@
+{
+  "watch": ["octopus-build-log.txt"],
+  "ext": "txt",
+  "exec": "node app.js"
+}

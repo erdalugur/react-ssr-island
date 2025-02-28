@@ -1,4 +1,5 @@
 node_modules
 build
 dist
+octopus-build-log.txt
 .turbo

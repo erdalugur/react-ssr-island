@@ -1,6 +1,6 @@
 import classes from './AddToCart.module.scss';
 import { cart } from '../../lib';
-
+import Button from 'ui/Button';
 export interface AddToCartProps {
   id: number;
   price: number;
@@ -12,9 +12,9 @@ function AddToCart(props: AddToCartProps) {
   };
 
   return (
-    <button className={classes.button} onClick={addToCardEvent}>
+    <Button className={classes.button} onClick={addToCardEvent}>
       Add to Cart
-    </button>
+    </Button>
   );
 }
 

@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "build": "octopus build",
-    "dev": "nodemon app.js",
+    "dev": "nodemon",
     "format": "prettier --write \"**/*.{js,ts,tsx,md}\"",
     "start": "NODE_ENV=production node app.js"
   },
@@ -18,13 +18,14 @@
     "preact": "^10.25.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "compression": "1.7.5"
+    "compression": "1.7.5",
+    "ui": "1.0.0"
   },
   "devDependencies": {
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.1",
     "octopus-config-prettier": "1.0.0",
-    "nodemon": "^3.1.9",
+    "nodemon": "^2.0.21",
     "typescript": "^5.7.2"
   },
   "browserslist": [

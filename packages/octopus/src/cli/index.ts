@@ -1,52 +1,39 @@
-import { Worker } from 'worker_threads';
-import * as path from 'path';
-import cyrpto from 'crypto';
+import createConfig from '../esbuild/config';
+import * as esbuild from 'esbuild';
 
 class CommandLineInterface {
-  buildId: string;
+  
   constructor() {
-    this.buildId = cyrpto.randomBytes(10).toString('hex');
     this.asyncWorker = this.asyncWorker.bind(this);
     this.build = this.build.bind(this);
     this.dev = this.dev.bind(this);
   }
   asyncWorker(mode: 'development' | 'production') {
-    const promises = [{ isServer: false }, { isServer: true }].map((config) => {
-      return new Promise((resolve, reject) => {
-        const p = path.resolve(__dirname, 'worker');
-        const worker = new Worker(p, {
-          workerData: {
-            isServer: config.isServer,
-            mode,
-            buildId: this.buildId
-          }
-        });
-        
-        worker.on('message', (v) => {
-          console.log(v);
-          resolve(v);
-        });
+    const promises = [{ isServer: false }, { isServer: true }].map((c) => {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const config = createConfig({
+            isServer: c.isServer,
+            mode: mode
+          });
 
-        worker.on('error', (err) => {
+          const ctx = await esbuild.context(config);
+          await ctx.watch();
+          resolve(ctx);
+        } catch (err) {
           reject(err);
-        });
-
-        worker.on('exit', (code) => {
-          if (code !== 0) {
-            reject(new Error(`Worker stopped with exit code ${code}`));
-          }
-        });
+        }
       });
     });
-
-    return Promise.all(promises);
+    return Promise.all(promises) as Promise<esbuild.BuildContext<esbuild.BuildOptions>[]>
   }
   build() {
     return this.asyncWorker('production');
   }
 
-  dev() {
-    return this.asyncWorker('development');
+  dev = async () => {
+    await this.asyncWorker('development');
+    return Promise.resolve({});
   }
 }
 
