@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cart, CartItem } from '../../lib';
+import Backdrop from 'ui/backdrop';
 
 export default function CartModal(props: any) {
   const [open, setOpen] = useState(props.show);
@@ -21,9 +22,9 @@ export default function CartModal(props: any) {
   };
 
   return (
-    open && (
-      <>
-        <div className={classes.backdrop} onClick={handleClose} />
+    <>
+      <Backdrop open={open} onClick={handleClose} />
+      {open && (
         <div className={classes.content}>
           <ul>
             {items.map((item) => (
@@ -37,7 +38,7 @@ export default function CartModal(props: any) {
             ))}
           </ul>
         </div>
-      </>
-    )
+      )}
+    </>
   );
 }

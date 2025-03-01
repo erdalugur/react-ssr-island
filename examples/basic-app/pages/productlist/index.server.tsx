@@ -35,7 +35,7 @@ function getRandomDescription() {
   return 'Some text about the jeans. Super slim and comfy lorem ipsum lorem jeansum. Lorem jeamsun denim lorem jeansum.';
 }
 
-function generateArrayOfObjects(count = 1000) {
+function generateArrayOfObjects(count = 100) {
   const items = [];
   for (let i = 0; i < count; i++) {
     items.push({

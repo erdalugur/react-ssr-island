@@ -18,7 +18,8 @@
     "preact": "^10.25.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "compression": "1.7.5"
+    "compression": "1.7.5",
+    "ui": "1.0.0"
   },
   "devDependencies": {
     "@types/react": "18.3.1",
