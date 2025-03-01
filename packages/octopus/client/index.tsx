@@ -1,18 +1,18 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, JSX } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { hydrationTypes } from '../hoc/types';
 
-export function whenVisible(element: Element, hydrateCallback: () => void) {
+export function whenVisible(container: Element, Component: () => JSX.Element, props: any) {
   const observer = new IntersectionObserver(([entry]) => {
     if (entry.isIntersecting) {
-      hydrateCallback();
-      observer.unobserve(element);
+      render(container, Component, props);
+      observer.unobserve(container);
     }
   });
-  observer.observe(element);
+  observer.observe(container);
 }
 
-export function render(container: Element, Component: any, props: any) {
+export function render(container: Element, Component: () => JSX.Element, props: any) {
   return hydrateRoot(
     container,
     <Suspense fallback={<div />}>
@@ -47,9 +47,7 @@ export default async function hydrate(
         render(container, Component, props);
         continue;
       }
-      whenVisible(container, () => {
-        render(container, Component, props);
-      });
+      whenVisible(container, Component, props);
     }
     return resolve();
   });

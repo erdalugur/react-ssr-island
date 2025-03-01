@@ -51,7 +51,7 @@ export default class Renderer {
         const style = fs.readFileSync(p, { encoding: 'utf-8' });
         this.styles[s] = style;
       }
-      return <style dangerouslySetInnerHTML={{ __html: this.styles[s] }} />;
+      return <style key={s} dangerouslySetInnerHTML={{ __html: this.styles[s] }} />;
     });
   };
 
