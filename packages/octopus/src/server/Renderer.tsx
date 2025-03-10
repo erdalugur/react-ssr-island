@@ -2,66 +2,59 @@ import { renderToString } from 'react-dom/server';
 import React from 'react';
 import path from 'path';
 import fs from 'fs';
-import { Routes, RenderPage } from '../types';
+import { RenderPage } from '../types';
 import { OctopusConfig } from '../config';
-
+import Routing from './Routing';
 export default class Renderer {
-  private routes: Routes;
+  private routing: Routing;
   private styles: Record<string, string> = {};
-  private octopusConfig: OctopusConfig;
+  private config: OctopusConfig;
   private assetPrefix: string;
 
-  constructor({ routes, config }: { routes: Routes; config: OctopusConfig }) {
-    this.routes = routes;
-    this.octopusConfig = config;
+  constructor({ routing, config }: { routing: Routing; config: OctopusConfig }) {
+    this.routing = routing;
+    this.config = config;
     this.assetPrefix = config.assetPrefix || '';
   }
-  
+
   getScripts = (scripts: string[]) => {
-    const { publicRuntimeConfig } = this.octopusConfig;
     return (
       <>
         {scripts.map((s: string) => (
           <script key={s} defer src={`${this.assetPrefix}${s}`} />
         ))}
-        <script
-          id="__PRELOADED_STATE__"
-          type="application/json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              runtimeConfig: publicRuntimeConfig
-            })
-          }}
-        />
       </>
     );
   };
 
   getStyles = (css: string[]) => {
-    const { outdir, inlineCss } = this.octopusConfig;
-
+    const { outdir, inlineCss } = this.config;
     if (!inlineCss)
-      return css.map((s: string) => (
-        <link key={s} rel="stylesheet" href={`${this.assetPrefix}${s}`} />
-      ));
-
-    return css.map((s) => {
-      if (!this.styles[s]) {
-        const p = path.join(outdir as string, `${s}`);
-        const style = fs.readFileSync(p, { encoding: 'utf-8' });
-        this.styles[s] = style;
-      }
-      return <style key={s} dangerouslySetInnerHTML={{ __html: this.styles[s] }} />;
-    });
+      return (
+        <>
+          {css.map((s: string, i) => (
+            <link key={i} rel="stylesheet" href={`${this.assetPrefix}${s}`} />
+          ))}
+        </>
+      );
+    return (
+      <>
+        {css.map((s, i) => {
+          if (!this.styles[s]) {
+            const p = path.join(outdir as string, `${s}`);
+            const style = fs.readFileSync(p, { encoding: 'utf-8' });
+            this.styles[s] = style;
+          }
+          return <style key={i} dangerouslySetInnerHTML={{ __html: this.styles[s] }} />;
+        })}
+      </>
+    );
   };
 
   renderToHTML = async ({ req, res, route }: RenderPage) => {
-    const Document = this.routes['/_document'].Page;
-
+    const Document = this.routing.getRoute('/_document').Page;
     const { Page, Meta, loader, css, js, params } = route;
-
     const pageProps = await loader({ req, res, params });
-
     return renderToString(
       <Document
         main={() => <Page {...pageProps.props} />}
@@ -70,7 +63,7 @@ export default class Renderer {
         styles={() => this.getStyles(css)}
         pageProps={{
           ...pageProps,
-          runtimeConfig: this.octopusConfig.publicRuntimeConfig
+          runtimeConfig: this.config.publicRuntimeConfig
         }}
       />
     );
