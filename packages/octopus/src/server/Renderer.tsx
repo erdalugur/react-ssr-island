@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { renderToString } from 'react-dom/server';
 import React from 'react';
 import path from 'path';
@@ -17,7 +18,7 @@ export default class Renderer {
     this.assetPrefix = config.assetPrefix || '';
   }
 
-  getScripts = (scripts: string[]) => {
+  private getScripts = (scripts: string[]) => {
     return (
       <>
         {scripts.map((s: string) => (
@@ -27,7 +28,7 @@ export default class Renderer {
     );
   };
 
-  getStyles = (css: string[]) => {
+  private getStyles = (css: string[]) => {
     const { outdir, inlineCss } = this.config;
     if (!inlineCss)
       return (
@@ -52,10 +53,10 @@ export default class Renderer {
   };
 
   renderToHTML = async ({ req, res, route }: RenderPage) => {
-    const Document = this.routing.getRoute('/_document').Page;
+    const Document = this.routing.getDocument();
     const { Page, Meta, loader, css, js, params } = route;
     const pageProps = await loader({ req, res, params });
-    const html =  renderToString(
+    const html = renderToString(
       <Document
         main={() => <Page {...pageProps.props} />}
         scripts={() => this.getScripts(js)}
@@ -68,5 +69,20 @@ export default class Renderer {
       />
     );
     return `<!DOCTYPE html> ${html}`;
+  };
+
+  render = async (req: Request, res: Response, route: string) => {
+    let item = this.routing.getRoute(route);
+    if (!item) {
+      item = this.routing.getRoute('/_error');
+      res.statusCode = 404;
+    }
+    if (item.runtime.endsWith('.html')) {
+      const routePath = this.routing.getRoutePath(item.runtime);
+      res.sendFile(routePath);
+      return;
+    }
+    const html = await this.renderToHTML({ req, res, route: item });
+    res.send(html);
   };
 }

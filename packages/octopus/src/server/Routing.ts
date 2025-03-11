@@ -33,7 +33,12 @@ export default class Routing {
 
   getRoutes = () => {
     return this.routes;
-  }
+  };
+
+  getDocument = () => {
+    const { Page } = this.getRoute('/_document');
+    return Page;
+  };
 
   generateRoutesMap = async () => {
     const pagesManifest = await this.manifestLoader<any>('pages-manifest.json');

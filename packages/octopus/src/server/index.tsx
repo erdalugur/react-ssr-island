@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { getOctopusConfig } from '../config';
 import StaticSiteGenerator from './StaticSiteGenerator';
 import Renderer from './Renderer';
-import OctopusServer from './Server';
 import Routing from './Routing';
 
 export default function createServer({ dev }: { dev: boolean }) {
@@ -12,7 +11,6 @@ export default function createServer({ dev }: { dev: boolean }) {
     config: config,
     routing: routing
   });
-  const server = new OctopusServer({ renderer, routing });
 
   const register = (config: Record<string, any>) => {
     Object.keys(config).forEach((key) => {
@@ -21,7 +19,7 @@ export default function createServer({ dev }: { dev: boolean }) {
   };
 
   return {
-    render: server.render,
+    render: renderer.render,
     prepare: async () => {
       register({
         ...config.publicRuntimeConfig,
