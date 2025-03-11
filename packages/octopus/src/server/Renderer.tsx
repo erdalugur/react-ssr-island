@@ -55,7 +55,7 @@ export default class Renderer {
     const Document = this.routing.getRoute('/_document').Page;
     const { Page, Meta, loader, css, js, params } = route;
     const pageProps = await loader({ req, res, params });
-    return renderToString(
+    const html =  renderToString(
       <Document
         main={() => <Page {...pageProps.props} />}
         scripts={() => this.getScripts(js)}
@@ -67,5 +67,6 @@ export default class Renderer {
         }}
       />
     );
+    return `<!DOCTYPE html> ${html}`;
   };
 }
