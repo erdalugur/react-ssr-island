@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getOctopusConfig } from '../config';
+import { getOctopusConfig, register } from '../config';
 import StaticSiteGenerator from './StaticSiteGenerator';
 import Renderer from './Renderer';
 import Routing from './Routing';
@@ -12,19 +12,10 @@ export default function createServer({ dev }: { dev: boolean }) {
     routing: routing
   });
 
-  const register = (config: Record<string, any>) => {
-    Object.keys(config).forEach((key) => {
-      process.env[key] = config[key];
-    });
-  };
-
   return {
     render: renderer.render,
     prepare: async () => {
-      register({
-        ...config.publicRuntimeConfig,
-        ...config.serverRuntimeConfig
-      });
+      register(config);
       if (dev) {
         const { default: OctopusHMR } = await import('./OctopusHMR');
         const hmr = new OctopusHMR({ routing, config });

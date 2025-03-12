@@ -9,9 +9,9 @@ export interface OctopusConfig {
   clientEntries?: Record<string, string>;
   serverEntries?: Record<string, string>;
   assetPrefix?: string;
-  webpack?: (config: any, options: { isServer: boolean; }) => Configuration;
+  webpack?: (config: any, options: { isServer: boolean }) => Configuration;
   inlineCss?: boolean;
-  wsPort?: number
+  wsPort?: number;
 }
 
 export function defineConfig(config: OctopusConfig) {
@@ -33,11 +33,21 @@ function mergeConfig(config: any) {
 
 export function getOctopusConfig(): OctopusConfig & { outdirname: string } {
   try {
-    const configPath = path.join(root, 'octopus.config.js')
+    const configPath = path.join(root, 'octopus.config.js');
     const config = require(configPath);
-    delete require.cache[configPath]
+    delete require.cache[configPath];
     return mergeConfig(config);
   } catch (error) {
     return mergeConfig({});
   }
+}
+
+export function register(config: any) {
+  const env = {
+    ...config.publicRuntimeConfig,
+    ...config.serverRuntimeConfig
+  }
+  Object.keys(env).forEach((key) => {
+    process.env[key] = env[key];
+  });
 }
