@@ -15,7 +15,7 @@ import {
   extraLoader
 } from './common';
 
-function createManifest(entries: any, isServer: boolean) {
+function createManifest(entries: any, isServer: boolean, mode: 'production' | 'development') {
   const serverGenerate = (_: any, files: any[]) => {
     const current: Record<string, any> = {};
     for (const item of files) {
@@ -56,6 +56,7 @@ function createManifest(entries: any, isServer: boolean) {
         }
         if (ext === '.js') {
           manifest[route][asset].push(item.path);
+          mode === 'development' ? manifest[route][asset].push(`/static/js/ws.js`) : null;
         }
       }
     }
@@ -95,7 +96,7 @@ export default function createConfig({ isServer, mode }: ConfigOptions): Configu
 
   const clientOutput = {
     path: outdir,
-    filename: isDevelopment ? 'static/js/[name]/main.js' : 'static/js/[name]/main.[chunkhash].js',
+    filename: 'static/js/[name]/main.[chunkhash].js',
     publicPath: octopusConfig.assetPrefix
       ? `${octopusConfig.assetPrefix}/`
       : `/${octopusConfig.outdirname}/`
@@ -147,7 +148,7 @@ export default function createConfig({ isServer, mode }: ConfigOptions): Configu
             ]
           }
         }),
-    plugins: [getMiniCssExtractPlugin(!isServer), createManifest(entries, isServer)],
+    plugins: [getMiniCssExtractPlugin(!isServer), createManifest(entries, isServer, mode)],
     externals: isServer
       ? [require('webpack-node-externals')(), { react: 'react', 'react-dom': 'react-dom' }]
       : []

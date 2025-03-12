@@ -11,6 +11,7 @@ export interface OctopusConfig {
   assetPrefix?: string;
   webpack?: (config: any, options: { isServer: boolean; }) => Configuration;
   inlineCss?: boolean;
+  wsPort?: number
 }
 
 export function defineConfig(config: OctopusConfig) {

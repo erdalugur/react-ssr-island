@@ -74,7 +74,7 @@ export default class Renderer {
   render = async (req: Request, res: Response, route: string) => {
     let item = this.routing.getRoute(route);
     if (!item) {
-      item = this.routing.getRoute('/_error');
+      item = this.routing.getErrorRoute();
       res.statusCode = 404;
     }
     if (item.runtime.endsWith('.html')) {

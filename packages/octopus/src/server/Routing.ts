@@ -27,6 +27,10 @@ export default class Routing {
     return this.routes[route];
   };
 
+  getErrorRoute = () => {
+    return this.getRoute('/_error');
+  };
+
   getStaticRoutes = () => {
     return Object.values(this.routes).filter((item) => item.ssg);
   };

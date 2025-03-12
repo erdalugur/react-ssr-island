@@ -13,7 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "isomorphic-fetch": "^3.0.0"
+    "isomorphic-fetch": "^3.0.0",
+    "ws": "8.18.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
@@ -28,6 +29,7 @@
 		"@types/isomorphic-fetch": "0.0.39",
     "@types/node": "22.10.9",
     "@types/webpack-node-externals": "3.0.4",
+    "@types/ws": "8.18.0",
     "babel-loader": "^9.2.1",
     "babel-plugin-css-modules-transform": "^1.6.2",
     "css-loader": "^7.1.2",

@@ -26,21 +26,9 @@ export default function createServer({ dev }: { dev: boolean }) {
         ...config.serverRuntimeConfig
       });
       if (dev) {
-        const { default: cli } = await import('../cli');
-        await cli.dev();
-        const { default: watchpack } = await import('../webpack/watchpack');
-        watchpack.onBundleUpdated((isServer, files) => {
-          // eslint-disable-next-line no-console
-          console.log(`🔄 Refreshing ${isServer ? 'server' : 'client'} side bundle...`);
-          // eslint-disable-next-line no-console
-          console.time('⏳ Refresh time');
-          routing.refreshRoutes(isServer, files).finally(() => {
-            // eslint-disable-next-line no-console
-            console.timeEnd('⏳ Refresh time');
-            // eslint-disable-next-line no-console
-            console.log(`✅ ${isServer ? 'Server' : 'Client'} side bundle updated successfully!`);
-          });
-        });
+        const { default: OctopusHMR } = await import('./OctopusHMR');
+        const hmr = new OctopusHMR({ routing, config });
+        await hmr.start();
       }
       await routing.generateRoutesMap();
       if (!dev) {
