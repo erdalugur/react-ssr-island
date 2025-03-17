@@ -99,7 +99,22 @@ export default function createConfig({ isServer, mode }: ConfigOptions): Configu
     filename: 'static/js/[name]/main.[chunkhash].js',
     publicPath: octopusConfig.assetPrefix
       ? `${octopusConfig.assetPrefix}/`
-      : `/${octopusConfig.outdirname}/`
+      : `/${octopusConfig.outdirname}/`,
+    environment: {
+      arrowFunction: false,
+      asyncFunction: false,
+      bigIntLiteral: false,
+      const: true,
+      destructuring: false,
+      document: true,
+      dynamicImportInWorker: false,
+      forOf: false,
+      globalThis: true,
+      module: false,
+      nodePrefixForCoreModules: false,
+      optionalChaining: true,
+      templateLiteral: false
+    }
   };
   const serverOutput = {
     path: outdir,
@@ -128,7 +143,7 @@ export default function createConfig({ isServer, mode }: ConfigOptions): Configu
       })
     },
     module: {
-      rules: [...getStyleLoaders(), getJavascriptLoaders()]
+      rules: [...getStyleLoaders(), getJavascriptLoaders(isServer)]
     },
     ...(isDevelopment && isServer
       ? {}

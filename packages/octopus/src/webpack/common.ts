@@ -126,7 +126,7 @@ export const getStyleLoaders = () => {
   return styleLoaders;
 };
 
-export const getJavascriptLoaders = () => {
+export const getJavascriptLoaders = (isServer: boolean) => {
   return {
     test: /\.(js|ts|tsx)$/,
     exclude: /node_modules/,
@@ -137,8 +137,17 @@ export const getJavascriptLoaders = () => {
           [
             '@babel/preset-env',
             {
-              targets: '> 0.25%, not dead',
-              useBuiltIns: 'usage',
+              ...(isServer
+                ? {
+                    ignoreBrowserslistConfig: true,
+                    targets: {
+                      node: 'current'
+                    }
+                  }
+                : {
+                    forceAllTransforms: true
+                  }),
+              useBuiltIns: false,
               corejs: false
             }
           ],
