@@ -124,7 +124,7 @@ export default function createConfig({ isServer, mode }: ConfigOptions): Configu
   const config: Configuration = {
     name: isServer ? 'server' : 'client',
     mode: mode,
-    target: isServer ? 'node' : 'browserslist',
+    target: isServer ? 'node' : ['browserslist'],
     entry: entries,
     output: isServer ? serverOutput : clientOutput,
     devtool: isDevelopment ? 'eval-source-map' : false,
