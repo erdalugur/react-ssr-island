@@ -130,7 +130,7 @@ export default function createConfig({ isServer, mode }: ConfigOptions): Configu
     devtool: isDevelopment ? 'eval-source-map' : false,
     resolve: {
       extensions: extensions,
-      alias: getAppAliases(),
+      alias: !isServer ? getAppAliases() : undefined,
       ...(isServer && {
         byDependency: {
           'node-fetch': {
