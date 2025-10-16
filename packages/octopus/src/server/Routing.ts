@@ -31,10 +31,6 @@ export default class Routing {
     return this.getRoute('/_error');
   };
 
-  getStaticRoutes = () => {
-    return Object.values(this.routes).filter((item) => item.ssg);
-  };
-
   getRoutes = () => {
     return this.routes;
   };
@@ -45,66 +41,33 @@ export default class Routing {
   };
 
   generateRoutesMap = async () => {
-    const pagesManifest = await this.manifestLoader<any>('pages-manifest.json');
-    const clientManifest = await this.manifestLoader<any>('static-manifest.json');
-    const promises = Object.keys(pagesManifest)
-      .filter((key) => pagesManifest[key].runtime)
-      .map(async (key) => {
-        const item = { ...pagesManifest[key], js: clientManifest[key]?.js || [] };
-        item.route = key;
-        const mod = await import(this.getRoutePath(item.runtime));
-        item.Page = mod.default;
-        item.Meta = mod.Meta || (() => null);
-        if (mod.getStaticProps) {
-          item.ssg = true;
-          if (mod.getStaticPaths) {
-            const props = await mod.getStaticPaths();
-            return (props.paths || []).map((p: any) => {
-              const prefix = p.route || key;
-              const route = [prefix, p.params?.slug].filter(Boolean).join('/');
-              return {
-                [route]: {
-                  ...item,
-                  destination: prefix,
-                  params: p.params,
-                  route: route,
-                  loader: mod.getStaticProps
-                }
-              };
-            });
-          } else {
-            return {
-              [key]: {
-                ...item,
-                destination: '',
-                params: {},
-                route: key,
-                loader: mod.getStaticProps
-              }
-            };
-          }
-        } else {
-          return {
-            [key]: {
-              ...item,
-              loader: mod.getServerSideProps || (() => ({ props: {} }))
-            }
-          };
-        }
-      });
-    const results = await Promise.all(promises);
-    this.routes = results.flat().reduce((acc, result) => {
-      return { ...acc, ...result };
-    }, {}) as Routes;
+    const [node, web] = await Promise.all([
+      this.manifestLoader<any>('pages-manifest.json'),
+      this.manifestLoader<any>('static-manifest.json')
+    ]);
+
+    const routes: Routes = {};
+    for (const key in node) {
+      const item = { ...node[key], js: web[key]?.js || [] };
+      item.route = key;
+      const mod = await import(this.getRoutePath(item.runtime));
+      item.Page = mod.default;
+      item.Meta = mod.Meta || (() => null);
+      item.getServerSideProps = mod.getServerSideProps || (() => ({ props: {} }));
+      routes[key] = item;
+    }
+    this.routes = routes;
   };
-  refreshRoutes = async (isServer: boolean, files: string[]) => {
+
+  refreshRoutes = async (isServer: boolean) => {
     if (isServer) {
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        const modulePath = path.join(this.outdir, file);
-        delete require.cache[modulePath];
+      for (const cachedPath in require.cache) {
+        if (cachedPath.startsWith(this.outdir)) {
+          delete require.cache[cachedPath];
+        }
       }
     }
+
     await this.generateRoutesMap();
     return Promise.resolve();
   };

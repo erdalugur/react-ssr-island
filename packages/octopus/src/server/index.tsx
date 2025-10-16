@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
 import { getOctopusConfig, register } from '../config';
-import StaticSiteGenerator from './StaticSiteGenerator';
 import Renderer from './Renderer';
 import Routing from './Routing';
+import { JsonLogger } from '../logger';
 
-export default function createServer({ dev }: { dev: boolean }) {
+export default function createServer({ dev, logger }: { dev: boolean; logger?: JsonLogger }) {
   const config = getOctopusConfig();
   const routing = new Routing({ config });
   const renderer = new Renderer({
     config: config,
-    routing: routing
+    routing: routing,
+    logger: logger
   });
 
   return {
@@ -18,18 +19,10 @@ export default function createServer({ dev }: { dev: boolean }) {
       register(config);
       if (dev) {
         const { default: OctopusHMR } = await import('./OctopusHMR');
-        const hmr = new OctopusHMR({ routing, config });
+        const hmr = new OctopusHMR({ routing, config, logger });
         await hmr.start();
       }
       await routing.generateRoutesMap();
-      if (!dev) {
-        const ssg = new StaticSiteGenerator({
-          config: config,
-          renderer: renderer,
-          routing: routing
-        });
-        ssg.generate();
-      }
       return Promise.resolve();
     }
   };

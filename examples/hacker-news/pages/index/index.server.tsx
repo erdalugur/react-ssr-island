@@ -1,4 +1,4 @@
-import { Context } from 'octopus/types';
+import { GetServerSideProps } from 'octopus/types';
 import '../../src/styles/reset.scss';
 import Header from '../../src/components/Header';
 import fetchData from '../../src/lib/fetch-data';
@@ -20,7 +20,7 @@ export default function Page({ stories, page }: { stories: Story[]; page: number
   );
 }
 
-export const getServerSideProps = async ({ req }: Context) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const page = Number(req.params.page || '1');
   const limit = 30;
   const offset = (page - 1) * limit;

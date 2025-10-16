@@ -1,5 +1,5 @@
 import Routing from './Routing';
-import logger from '../logger';
+import { createLogger, JsonLogger } from '../logger';
 import { OctopusConfig } from '../config';
 import OctopusWebSocket from './OctopusWebSocket';
 import cli from '../cli';
@@ -7,23 +7,32 @@ import watchpack from '../webpack/watchpack';
 export default class OctopusHMR {
   private routing: Routing;
   private wss: OctopusWebSocket;
-
-  constructor({ routing, config }: { routing: Routing; config: OctopusConfig }) {
+  private logger!: JsonLogger;
+  constructor({
+    routing,
+    config,
+    logger
+  }: {
+    routing: Routing;
+    config: OctopusConfig;
+    logger?: JsonLogger;
+  }) {
     this.routing = routing;
     this.wss = new OctopusWebSocket({ config });
+    this.logger = createLogger(logger, 'OctopusHMR');
   }
 
   start = async () => {
     await cli.dev();
     this.wss.attachWebSocketJS();
 
-    watchpack.onBundleUpdated((isServer, files) => {
-      logger.log(`🔄 Refreshing ${isServer ? 'server' : 'client'} side bundle...`);
-      logger.time('⏳ Refresh time');
+    watchpack.onBundleUpdated((isServer) => {
+      this.logger.info(`refreshing ${isServer ? 'server' : 'client'} side bundle...`);
+      this.logger.time('refresh time');
 
-      this.routing.refreshRoutes(isServer, files).finally(() => {
-        logger.timeEnd('⏳ Refresh time');
-        logger.log(`✅ ${isServer ? 'Server' : 'Client'} side bundle updated successfully!`);
+      this.routing.refreshRoutes(isServer).finally(() => {
+        this.logger.timeEnd('refresh time');
+        this.logger.info(`✅ ${isServer ? 'Server' : 'Client'} side bundle updated successfully!`);
         this.wss.reload();
       });
     });

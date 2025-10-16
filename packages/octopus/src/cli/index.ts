@@ -20,7 +20,7 @@ class CommandLineInterface {
         });
 
         worker.on('message', (files) => {
-          watchpack.emitBundleUpdated(config.isServer, JSON.parse(files || '[]'));
+          watchpack.emitBundleUpdated(config.isServer);
           resolve(files);
         });
 

@@ -3,19 +3,30 @@ import { renderToString } from 'react-dom/server';
 import React from 'react';
 import path from 'path';
 import fs from 'fs';
-import { RenderPage } from '../types';
+import { Route } from '../types';
 import { OctopusConfig } from '../config';
 import Routing from './Routing';
+import { createLogger, JsonLogger } from '../logger';
 export default class Renderer {
   private routing: Routing;
   private styles: Record<string, string> = {};
   private config: OctopusConfig;
   private assetPrefix: string;
+  private logger!: JsonLogger;
 
-  constructor({ routing, config }: { routing: Routing; config: OctopusConfig }) {
+  constructor({
+    routing,
+    config,
+    logger
+  }: {
+    routing: Routing;
+    config: OctopusConfig;
+    logger?: JsonLogger;
+  }) {
     this.routing = routing;
     this.config = config;
     this.assetPrefix = config.assetPrefix || '';
+    this.logger = createLogger(logger, 'Renderer')
   }
 
   private getScripts = (scripts: string[]) => {
@@ -52,16 +63,14 @@ export default class Renderer {
     );
   };
 
-  renderToHTML = async ({ req, res, route }: RenderPage) => {
+  renderToHTML = ({ pageProps, route }: { pageProps: any; route: Route }) => {
     const Document = this.routing.getDocument();
-    const { Page, Meta, loader, css, js, params } = route;
-    const pageProps = await loader({ req, res, params });
     const html = renderToString(
       <Document
-        main={() => <Page {...pageProps.props} />}
-        scripts={() => this.getScripts(js)}
-        meta={() => <Meta {...pageProps.props} />}
-        styles={() => this.getStyles(css)}
+        main={() => <route.Page {...pageProps.props} />}
+        scripts={() => this.getScripts(route.js)}
+        meta={() => <route.Meta {...pageProps.props} />}
+        styles={() => this.getStyles(route.css)}
         pageProps={{
           ...pageProps,
           runtimeConfig: this.config.publicRuntimeConfig
@@ -71,18 +80,34 @@ export default class Renderer {
     return `<!DOCTYPE html> ${html}`;
   };
 
-  render = async (req: Request, res: Response, route: string) => {
-    let item = this.routing.getRoute(route);
-    if (!item) {
-      item = this.routing.getErrorRoute();
+  renderError = async ({ req, res, status }: { req: Request; res: Response; status: number }) => {
+    const route = this.routing.getErrorRoute();
+    res.statusCode = status;
+    const pageProps = await route.getServerSideProps({ req, res });
+    return this.renderToHTML({ pageProps, route });
+  };
+
+  render = async (req: Request, res: Response, routePath: string) => {
+    let route = this.routing.getRoute(routePath);
+    if (!route) {
       res.statusCode = 404;
+      route = this.routing.getErrorRoute();
     }
-    if (item.runtime.endsWith('.html')) {
-      const routePath = this.routing.getRoutePath(item.runtime);
-      res.sendFile(routePath);
-      return;
+    try {
+      const pageProps = await route.getServerSideProps({ req, res });
+      const { redirect, notFound } = pageProps;
+      if (redirect) {
+        res.redirect(redirect.status || 302, redirect.destination);
+        return;
+      }
+      if (notFound) {
+        res.send(await this.renderError({ req, res, status: 404 }));
+        return;
+      }
+      res.send(await this.renderToHTML({ pageProps, route }));
+    } catch (error: any) {
+      this.logger.error('Render error: ' + error.message);
+      res.send(await this.renderError({ req, res, status: 500 }));
     }
-    const html = await this.renderToHTML({ req, res, route: item });
-    res.send(html);
   };
 }
