@@ -1,4 +1,6 @@
 import React from 'react';
+import { GetServerSideProps } from '../types';
+import { JsonLogger } from '../logger';
 
 interface ErrorProps {
   statusCode: number;
@@ -21,12 +23,15 @@ export default function Error({ statusCode, message }: ErrorProps) {
   );
 }
 
-export const getServerSideProps = ({ res, err }: any) => {
-  const statusCode = res ? res.statusCode : err ? err.statusCode : 404;
+export const getServerSideProps: GetServerSideProps = async ({ res, err }) => {
+  const statusCode = res.statusCode;
+  const logger = new JsonLogger(err?.context);
+  const message = `An error ${statusCode} occurred on server`;
+  logger.error(err?.message || message, err?.status);
   return {
     props: {
       statusCode,
-      message: `An error ${statusCode} occurred on server`
+      message: message
     }
   };
 };

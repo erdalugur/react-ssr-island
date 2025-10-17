@@ -3,30 +3,19 @@ import { renderToString } from 'react-dom/server';
 import React from 'react';
 import path from 'path';
 import fs from 'fs';
-import { Route } from '../types';
+import { IncomingError, Route } from '../types';
 import { OctopusConfig } from '../config';
 import Routing from './Routing';
-import { createLogger, JsonLogger } from '../logger';
 export default class Renderer {
   private routing: Routing;
   private styles: Record<string, string> = {};
   private config: OctopusConfig;
   private assetPrefix: string;
-  private logger!: JsonLogger;
 
-  constructor({
-    routing,
-    config,
-    logger
-  }: {
-    routing: Routing;
-    config: OctopusConfig;
-    logger?: JsonLogger;
-  }) {
+  constructor({ routing, config }: { routing: Routing; config: OctopusConfig }) {
     this.routing = routing;
     this.config = config;
     this.assetPrefix = config.assetPrefix || '';
-    this.logger = createLogger(logger, 'Renderer')
   }
 
   private getScripts = (scripts: string[]) => {
@@ -80,20 +69,32 @@ export default class Renderer {
     return `<!DOCTYPE html> ${html}`;
   };
 
-  renderError = async ({ req, res, status }: { req: Request; res: Response; status: number }) => {
+  renderErrorToHTML = async ({
+    req,
+    res,
+    err
+  }: {
+    req: Request;
+    res: Response;
+    err?: IncomingError;
+  }) => {
     const route = this.routing.getErrorRoute();
-    res.statusCode = status;
-    const pageProps = await route.getServerSideProps({ req, res });
+    const pageProps = await route.getServerSideProps({ req, res, err });
     return this.renderToHTML({ pageProps, route });
   };
 
+  renderNotFound = async ({ req, res }: { req: Request; res: Response }) => {
+    res.statusCode = 404;
+    res.send(await this.renderErrorToHTML({ req, res }));
+  };
+
   render = async (req: Request, res: Response, routePath: string) => {
-    let route = this.routing.getRoute(routePath);
-    if (!route) {
-      res.statusCode = 404;
-      route = this.routing.getErrorRoute();
-    }
     try {
+      const route = this.routing.getRoute(routePath);
+      if (!route) {
+        this.renderNotFound({ req, res });
+        return;
+      }
       const pageProps = await route.getServerSideProps({ req, res });
       const { redirect, notFound } = pageProps;
       if (redirect) {
@@ -101,13 +102,14 @@ export default class Renderer {
         return;
       }
       if (notFound) {
-        res.send(await this.renderError({ req, res, status: 404 }));
+        this.renderNotFound({ req, res });
         return;
       }
       res.send(await this.renderToHTML({ pageProps, route }));
     } catch (error: any) {
-      this.logger.error('Render error: ' + error.message);
-      res.send(await this.renderError({ req, res, status: 500 }));
+      res.statusCode = 500;
+      const err = { message: error.message, context: routePath, status: 500 };
+      res.send(await this.renderErrorToHTML({ req, res, err }));
     }
   };
 }

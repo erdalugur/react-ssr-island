@@ -17,5 +17,5 @@ export function getProducts(count = 100) {
       price: 5500
     });
   }
-  return items;
+  return Promise.resolve(items);
 }

@@ -27,8 +27,18 @@ export interface Routes {
   [route: string]: Route;
 }
 
-export type GetServerSideProps = ({ req, res }: { req: Request; res: Response }) => Promise<{
-  props?: any;
+export type IncomingError = { context: string; message: string; status: number };
+
+export type GetServerSideProps<T = any> = ({
+  req,
+  res,
+  err
+}: {
+  req: Request;
+  res: Response;
+  err?: IncomingError;
+}) => Promise<{
+  props?: T;
   notFound?: boolean;
   redirect?: {
     destination: string;
