@@ -21,10 +21,6 @@ export async function ensureDirectoryExists(dirPath: string) {
   }
 }
 
-export async function readFile(filePath: string) {
-  return fs.readFile(filePath, { encoding: 'utf-8' });
-}
-
 export async function writeFile(filePath: string, data: string) {
   return fs.writeFile(filePath, data);
 }
