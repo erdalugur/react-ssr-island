@@ -23,6 +23,9 @@ export default function createServer({ dev }: { dev: boolean }) {
         renderer,
         routing
       });
+    },
+    getRequestHandler: () => {
+      return renderer.catchAllRoutes;
     }
   };
 }

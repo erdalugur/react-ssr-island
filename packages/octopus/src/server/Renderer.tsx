@@ -5,6 +5,8 @@ import { IncomingError, Route } from '../types';
 import { OctopusConfig } from '../config';
 import Routing from './Routing';
 import Assets from './Assets';
+import { parse } from 'url';
+
 export default class Renderer {
   private routing: Routing;
   private config: OctopusConfig;
@@ -76,5 +78,14 @@ export default class Renderer {
       const err = { message: error.message, context: routePath, status: 500 };
       res.send(await this.renderErrorToHTML({ req, res, err }));
     }
+  };
+
+  catchAllRoutes = (req: Request, res: Response) => {
+    const { pathname } = parse(req.originalUrl, true) as { pathname: string };
+    const route = pathname === '/' ? '/index' : pathname;
+    const match = this.routing.matchRoute(route) ?? '';
+    const params = this.routing.getRouteParams(match, route);
+    req.params = params;
+    this.render(req, res, match);
   };
 }

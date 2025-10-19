@@ -72,4 +72,40 @@ export default class Routing {
 
     await this.generateRoutesMap();
   };
+
+  matchRoute = (route: string) => {
+    const cleanPath = route.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+
+    if (this.routes[cleanPath]) {
+      return cleanPath;
+    }
+
+    for (const routeKey of Object.keys(this.routes)) {
+      const normalizedRoute = routeKey.replace(/\/+$/, '') || '/';
+      const pattern = '^' + normalizedRoute.replace(/\[.+?\]/g, '[^/]+') + '$';
+      const regex = new RegExp(pattern);
+
+      if (regex.test(cleanPath)) {
+        return routeKey;
+      }
+    }
+
+    return undefined;
+  };
+
+  getRouteParams = (pattern: string, route: string) => {
+    const patternParts = pattern.split('/').filter(Boolean);
+    const pathParts = route.split('/').filter(Boolean);
+
+    const params: Record<string, string> = {};
+
+    patternParts.forEach((part, i) => {
+      if (part.startsWith('[') && part.endsWith(']')) {
+        const key = part.slice(1, -1);
+        params[key] = pathParts[i];
+      }
+    });
+
+    return params;
+  };
 }

@@ -19,3 +19,8 @@ export function getProducts(count = 100) {
   }
   return Promise.resolve(items);
 }
+
+export async function getProductById(id: string) {
+  const products = await getProducts();
+  return products.find((x) => x.id.toString() === id);
+}
