@@ -85,7 +85,7 @@ export default class Renderer {
     const route = pathname === '/' ? '/index' : pathname;
     const match = this.routing.matchRoute(route) ?? '';
     const params = this.routing.getRouteParams(match, route);
-    req.params = params;
+    req.params = params as any;
     this.render(req, res, match);
   };
 }

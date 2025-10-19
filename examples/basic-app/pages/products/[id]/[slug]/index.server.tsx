@@ -1,8 +1,8 @@
-import '../../../src/styles/reset.scss';
+import '../../../../src/styles/reset.scss';
 import React from 'react';
-import Header from '../../../src/components/Header';
-import ProductList from '../../../src/components/ProductList';
-import * as api from '../../../src/api';
+import Header from '../../../../src/components/Header';
+import ProductList from '../../../../src/components/ProductList';
+import * as api from '../../../../src/api';
 import { GetServerSideProps } from 'octopus/types';
 
 export default function Page({ product }: { product: any }) {
@@ -15,7 +15,7 @@ export default function Page({ product }: { product: any }) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const product = await api.getProductById(req.params.slug);
+  const product = await api.getProductById(req.params.id);
   return {
     props: {
       product,

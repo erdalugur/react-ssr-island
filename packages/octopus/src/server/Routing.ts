@@ -73,17 +73,16 @@ export default class Routing {
     await this.generateRoutesMap();
   };
 
-  matchRoute = (route: string) => {
+  matchRoute = (route: string): string | undefined => {
     const cleanPath = route.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
-
-    if (this.routes[cleanPath]) {
-      return cleanPath;
-    }
 
     for (const routeKey of Object.keys(this.routes)) {
       const normalizedRoute = routeKey.replace(/\/+$/, '') || '/';
-      const pattern = '^' + normalizedRoute.replace(/\[.+?\]/g, '[^/]+') + '$';
-      const regex = new RegExp(pattern);
+      const pattern = normalizedRoute
+        .replace(/\[\.\.\.(.+?)\]/g, '(.+)')
+        .replace(/\[(.+?)\]/g, '([^/]+)');
+
+      const regex = new RegExp(`^${pattern}$`);
 
       if (regex.test(cleanPath)) {
         return routeKey;
@@ -93,18 +92,28 @@ export default class Routing {
     return undefined;
   };
 
-  getRouteParams = (pattern: string, route: string) => {
-    const patternParts = pattern.split('/').filter(Boolean);
-    const pathParts = route.split('/').filter(Boolean);
+  getRouteParams = (pattern: string = '', route: string = '') => {
+    const cleanPattern = pattern.replace(/\/+$/, '') || '/';
+    const cleanRoute = route.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
 
-    const params: Record<string, string> = {};
+    const patternParts = cleanPattern.split('/').filter(Boolean);
+    const pathParts = cleanRoute.split('/').filter(Boolean);
 
-    patternParts.forEach((part, i) => {
-      if (part.startsWith('[') && part.endsWith(']')) {
-        const key = part.slice(1, -1);
+    const params: Record<string, string | string[]> = {};
+
+    for (let i = 0; i < patternParts.length; i++) {
+      const p = patternParts[i];
+      if (p.startsWith('[...') && p.endsWith(']')) {
+        const key = p.slice(4, -1);
+        params[key] = pathParts.slice(i);
+        break;
+      }
+
+      if (p.startsWith('[') && p.endsWith(']')) {
+        const key = p.slice(1, -1);
         params[key] = pathParts[i];
       }
-    });
+    }
 
     return params;
   };
