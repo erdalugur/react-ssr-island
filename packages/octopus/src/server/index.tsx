@@ -25,7 +25,7 @@ export default function createServer({ dev }: { dev: boolean }) {
       });
     },
     getRequestHandler: () => {
-      return renderer.catchAllRoutes;
+      return renderer.requestHandler;
     }
   };
 }

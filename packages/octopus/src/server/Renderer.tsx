@@ -58,20 +58,25 @@ export default class Renderer {
   render = async (req: Request, res: Response, routePath: string) => {
     try {
       const route = this.routing.getRoute(routePath);
-      if (!route) {
-        this.renderNotFound({ req, res });
-        return;
+      if (!route) return this.renderNotFound({ req, res });
+
+      const staticRouteParams = (await route?.getStaticParams?.()) || [];
+      const incomingRequestParams = this.routing.getStaticRouteParams(
+        staticRouteParams,
+        req.params
+      );
+
+      if (route?.getStaticParams && !incomingRequestParams) {
+        return this.renderNotFound({ req, res });
       }
-      const pageProps = await route.getServerSideProps({ req, res });
+
+      const pageProps = await route.getServerSideProps({ req, res, params: incomingRequestParams });
       const { redirect, notFound } = pageProps;
-      if (redirect) {
-        res.redirect(redirect.status || 302, redirect.destination);
-        return;
-      }
-      if (notFound) {
-        this.renderNotFound({ req, res });
-        return;
-      }
+
+      if (redirect) return res.redirect(redirect.status || 302, redirect.destination);
+
+      if (notFound) return this.renderNotFound({ req, res });
+
       res.send(await this.renderToHTML({ pageProps, route }));
     } catch (error: any) {
       res.statusCode = 500;
@@ -80,11 +85,13 @@ export default class Renderer {
     }
   };
 
-  catchAllRoutes = (req: Request, res: Response) => {
+  requestHandler = (req: Request, res: Response) => {
     const { pathname } = parse(req.originalUrl, true) as { pathname: string };
     const route = pathname === '/' ? '/index' : pathname;
-    const match = this.routing.matchRoute(route) ?? '';
-    const params = this.routing.getRouteParams(match, route);
+    const match = this.routing.matchRoute(route);
+    if (!match) return this.renderNotFound({ req, res });
+
+    const params = this.routing.getRouteURLParams(match, route);
     req.params = params as any;
     this.render(req, res, match);
   };

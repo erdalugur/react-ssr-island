@@ -2,6 +2,10 @@ import { OctopusConfig } from '../config';
 import { Routes } from '../types';
 import { promises as fs } from 'fs';
 import path from 'path';
+
+function noop(param: any) {
+  return () => param;
+}
 export default class Routing {
   private outdir: string;
   private routePathsCache: Record<string, string> = {};
@@ -56,8 +60,9 @@ export default class Routing {
       item.route = key;
       const mod = await import(this.getRoutePath(item.runtime));
       item.Page = mod.default;
-      item.Meta = mod.Meta || (() => null);
-      item.getServerSideProps = mod.getServerSideProps || (() => ({ props: {} }));
+      item.Meta = mod.Meta || noop(null);
+      item.getServerSideProps = mod.getServerSideProps || mod.getStaticProps || noop({ props: {} });
+      item.getStaticParams = mod.getStaticParams;
       routes[key] = item;
     }
     this.routes = routes;
@@ -92,7 +97,7 @@ export default class Routing {
     return undefined;
   };
 
-  getRouteParams = (pattern: string = '', route: string = '') => {
+  getRouteURLParams = (pattern: string = '', route: string = '') => {
     const cleanPattern = pattern.replace(/\/+$/, '') || '/';
     const cleanRoute = route.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
 
@@ -116,5 +121,16 @@ export default class Routing {
     }
 
     return params;
+  };
+
+  getStaticRouteParams = (
+    staticParams: any[],
+    requestParams: Record<string, string>
+  ): Record<string, string> | undefined => {
+    return Object.keys(requestParams).length
+      ? staticParams.find((p) =>
+          Object.entries(p).every(([key, value]) => requestParams[key] === value)
+        )
+      : undefined;
   };
 }

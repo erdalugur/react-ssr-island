@@ -20,6 +20,7 @@ export interface Route {
   revalidate?: number;
   route: string;
   getServerSideProps: GetServerSideProps;
+  getStaticParams?: GetStaticParams;
   Meta: (props: any) => JSX.Element;
   Page: (props: any) => JSX.Element;
 }
@@ -32,11 +33,13 @@ export type IncomingError = { context: string; message: string; status: number }
 export type GetServerSideProps<T = any> = ({
   req,
   res,
-  err
+  err,
+  params
 }: {
   req: Request;
   res: Response;
   err?: IncomingError;
+  params?: Record<string, any>;
 }) => Promise<{
   props?: T;
   notFound?: boolean;
@@ -44,4 +47,10 @@ export type GetServerSideProps<T = any> = ({
     destination: string;
     status: number;
   };
+}>;
+
+export type GetStaticParams = () => Promise<any[]>;
+
+export type GetStaticProps<T = any> = ({}: { params: Record<string, number | string> }) => Promise<{
+  props: T;
 }>;
