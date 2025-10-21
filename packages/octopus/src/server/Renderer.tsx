@@ -1,7 +1,6 @@
-import { Request, Response } from 'express';
 import { renderToString } from 'react-dom/server';
 import React from 'react';
-import { IncomingError, Route } from '../types';
+import { HttpRequest, HttpResponse, IncomingError, Route } from '../types';
 import { OctopusConfig } from '../config';
 import Routing from './Routing';
 import Assets from './Assets';
@@ -41,8 +40,8 @@ export default class Renderer {
     res,
     err
   }: {
-    req: Request;
-    res: Response;
+    req: HttpRequest;
+    res: HttpResponse;
     err?: IncomingError;
   }) => {
     const route = this.routing.getErrorRoute();
@@ -50,12 +49,12 @@ export default class Renderer {
     return this.renderToHTML({ pageProps, route });
   };
 
-  renderNotFound = async ({ req, res }: { req: Request; res: Response }) => {
+  renderNotFound = async ({ req, res }: { req: HttpRequest; res: HttpResponse }) => {
     res.statusCode = 404;
     res.send(await this.renderErrorToHTML({ req, res }));
   };
 
-  render = async (req: Request, res: Response, routePath: string) => {
+  render = async (req: HttpRequest, res: HttpResponse, routePath: string) => {
     try {
       const route = this.routing.getRoute(routePath);
       if (!route) return this.renderNotFound({ req, res });
@@ -85,8 +84,8 @@ export default class Renderer {
     }
   };
 
-  requestHandler = (req: Request, res: Response) => {
-    const { pathname } = parse(req.originalUrl, true) as { pathname: string };
+  requestHandler = (req: HttpRequest, res: HttpResponse) => {
+    const { pathname } = parse(req.url as string, true) as { pathname: string };
     const route = pathname === '/' ? '/index' : pathname;
     const match = this.routing.matchRoute(route);
     if (!match) return this.renderNotFound({ req, res });

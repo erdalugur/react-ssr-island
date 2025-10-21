@@ -14,11 +14,9 @@
   "license": "ISC",
   "dependencies": {
     "octopus": "1.0.0",
-    "express": "^4.21.2",
     "preact": "^10.25.3",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "compression": "1.7.5",
     "ui": "1.0.0"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { JSX } from 'react';
-import { Request, Response } from 'express';
+import { IncomingMessage, ServerResponse } from 'http';
 
 export interface DocumentProps {
   main: () => JSX.Element;
@@ -36,8 +36,8 @@ export type GetServerSideProps<T = any> = ({
   err,
   params
 }: {
-  req: Request;
-  res: Response;
+  req: HttpRequest;
+  res: HttpResponse;
   err?: IncomingError;
   params?: Record<string, any>;
 }) => Promise<{
@@ -54,3 +54,19 @@ export type GetStaticParams = () => Promise<any[]>;
 export type GetStaticProps<T = any> = ({}: { params: Record<string, number | string> }) => Promise<{
   props: T;
 }>;
+
+
+
+export interface HttpRequest extends IncomingMessage {
+  params: Record<string, any>;
+  query?: Record<string, any>;
+  body?: any;
+}
+
+export interface HttpResponse extends ServerResponse {
+  status: (code: number) => HttpResponse;
+  json: (body: any) => void;
+  send: (body: any) => void;
+  statusCode: number;
+  redirect: (status: number, url: string) => void;
+}
